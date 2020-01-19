@@ -17,7 +17,7 @@ end
 
 function FileIndex(grib_path::String, index_keys::Array{String, 1})
     fileindex = FileIndex()
-    fileindex.allowed_protocol_version = v"1.0.0"
+    fileindex.allowed_protocol_version = v"0.0.0"
     fileindex.grib_path = grib_path
     fileindex.index_keys = index_keys
 
