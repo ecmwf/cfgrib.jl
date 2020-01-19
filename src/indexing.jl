@@ -12,12 +12,13 @@ mutable struct FileIndex
     offsets::Array
     header_values::OrderedDict{String, Array}
 
-    FileIndex() = new()
+    filter_by_keys::Dict
+
+    FileIndex() = new(v"0.0.0")
 end
 
 function FileIndex(grib_path::String, index_keys::Array{String, 1})
     fileindex = FileIndex()
-    fileindex.allowed_protocol_version = v"0.0.0"
     fileindex.grib_path = grib_path
     fileindex.index_keys = index_keys
 
@@ -41,7 +42,12 @@ function index_path!(index::FileIndex)
     index.index_path = ".$(index.grib_path).$index_keys_hash.idx"
 end
 
-function from_indexfile!()
+function save_indexfile(index::FileIndex)
+    throw("unimplemented")
+end
+
+function from_indexfile!(index::FileIndex)
+    throw("unimplemented")
 end
 
 function from_gribfile!(index::FileIndex)
@@ -53,6 +59,9 @@ function from_gribfile!(index::FileIndex)
     index_key_symbols = Tuple(Symbol.(index_keys))
     HeaderTuple = NamedTuple{index_key_symbols}
 
+    #  TODO: Time function to see if it is worth optimising
+    #  based on gribfile.nmessages w/ known-length arrays
+    #  more, or if I/O overhead too large
     GribFile(index.grib_path) do f
         for message in f
             header_values = Array{Any}(undef, index_key_count)
@@ -86,4 +95,9 @@ function get_header_values!(index::FileIndex)
     end
 
     index.header_values = header_values
+end
+
+#  TODO: Implement subindex/filtering
+function filter()
+    throw("unimplemented")
 end
