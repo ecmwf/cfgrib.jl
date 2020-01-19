@@ -1,5 +1,6 @@
 module cfgrib
 
-greet() = print("Hello World!")
+include("indexing.jl")
+include("dataset.jl")
 
-end # module
+end
