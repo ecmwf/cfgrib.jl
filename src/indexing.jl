@@ -97,6 +97,14 @@ function get_header_values!(index::FileIndex)
     index.header_values = header_values
 end
 
+function getone(index::FileIndex, item)
+    throw("unimplemented")
+end
+
+function first(index::FileIndex)
+    throw("unimplemented")
+end
+
 #  TODO: Implement subindex/filtering
 function filter()
     throw("unimplemented")
