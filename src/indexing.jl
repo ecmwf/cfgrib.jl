@@ -2,6 +2,25 @@ using DataStructures
 using GRIB
 
 
+"""
+    FileIndex
+
+A mutable store for indecies of a GRIB file
+
+# Constructors
+```julia
+FileIndex(grib_path::String, index_keys::Array{String, 1})
+```
+
+# Fields
+ - `allowed_protocol_version::VersionNumber` : Version number used when saving/hashing index files
+ - `grib_path::String` : Path to the file the index belongs to
+ - `index_path::String` : Path to the index cache file
+ - `index_keys::Array{String, 1}` :
+ - `offsets::Array` :
+ - `header_values::OrderedDict{String, Array}` :
+ - `filter_by_keys::Dict` :
+"""
 mutable struct FileIndex
     allowed_protocol_version::VersionNumber
 
@@ -16,6 +35,9 @@ mutable struct FileIndex
 
     FileIndex() = new(v"0.0.0")
 end
+
+
+#  Constructors
 
 function FileIndex(grib_path::String, index_keys::Array{String, 1})
     fileindex = FileIndex()
@@ -33,6 +55,54 @@ function FileIndex(grib_path::String, index_keys::Array{String, 1})
 
     return fileindex
 end
+
+
+#  Base function dispatch
+
+function Base.getindex(obj::FileIndex, key)
+    return obj.header_values[key]
+end
+
+function filter_offsets(index::FileIndex; query...)
+    filtered_offsets = Array{Pair{Any,Any},1}()
+
+    for (header_values, offset_values) in index.offsets
+        for (k, v) in query
+            if header_values[k] != v
+                break
+            else
+                append!(filtered_offsets, [Pair(header_values, offset_values)])
+                break
+            end
+        end
+    end
+
+    return filtered_offsets
+end
+
+function filter(index::FileIndex; query...)
+    filtered_offsets = filter_offsets(index; query...)
+
+    filtered_index = deepcopy(index)
+    filtered_index.offsets = filtered_offsets
+    filtered_index.filter_by_keys = query
+
+    get_header_values!(filtered_index)
+
+    return filtered_index
+end
+
+function filter!(index::FileIndex; query...)
+    filtered_offsets = filter_offsets(index; query...)
+
+    index.offsets = filtered_offsets
+    index.filter_by_keys = query
+
+    get_header_values!(index)
+end
+
+
+#  Functions
 
 function index_path!(index::FileIndex)
     index_keys_hash = hash(
@@ -98,7 +168,13 @@ function get_header_values!(index::FileIndex)
 end
 
 function getone(index::FileIndex, item)
-    throw("unimplemented")
+    values = index[item]
+
+    if length(values) != 1
+        throw("Expected 1 value for $(item), found $(length(values)) instead")
+    end
+
+    return values[1]
 end
 
 function first(index::FileIndex)
