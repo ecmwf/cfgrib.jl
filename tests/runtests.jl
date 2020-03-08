@@ -5,4 +5,8 @@ using Test
     @testset "Indexing" begin
         include("indexing.jl")
     end
+
+    @testset "CFMessage" begin
+        include("cfmessage.jl")
+    end
 end

@@ -138,6 +138,8 @@ function from_gribfile!(index::FileIndex)
             for (i, key) in enumerate(index_keys)
                 value = haskey(message, key) ? message[key] : missing
                 value = value isa Array ? Tuple(value) : value
+                #  TODO: use dispatch to do this via GRIB
+                value = key == "time" ? from_grib_date_time(message) : value
 
                 header_values[i] = value
             end
@@ -178,7 +180,11 @@ function getone(index::FileIndex, item)
 end
 
 function first(index::FileIndex)
-    throw("unimplemented")
+    GribFile(index.grib_path) do f
+        first_offset = index.offsets[1][2][1]
+        seek(f, first_offset)
+        return Message(f)
+    end
 end
 
 #  TODO: Implement subindex/filtering

@@ -1,3 +1,4 @@
+using cfgrib
 using DataStructures
 
 #  Dummy offsets for testing
@@ -64,10 +65,10 @@ cfgrib.index_path!(dfi)
 cfgrib.get_header_values!(dfi)
 expected_header_values = OrderedDict(
     "int"      => [10],
-    "array"    => Array{Int64,1}[[1, 2, 3, 5], [1, 2, 3]],
-    "string"   => ["cabbage", "potato"],
+    "array"    => Array{Int64,1}[[1, 2, 3], [1, 2, 3, 5]],
+    "string"   => ["potato", "cabbage"],
     "absent"   => Missing[missing],
-    "one_here" => Union{Missing, Int64}[missing, 20]
+    "one_here" => Union{Missing, Int64}[20, missing]
 )
 @test isequal(dfi.header_values, expected_header_values)
 
