@@ -1,22 +1,133 @@
 using DataStructures
 
+
+struct Variable
+    dimensions::Tuple{Vararg{String}}
+    data::Array
+    attributes::Dict{String, String}
+end
+
+function Base.:(==)(a::Variable, b::Variable)
+    attributes = a.attributes == b.attributes
+    dimensions = a.dimensions == b.dimensions
+    data = a.data == b.data
+
+    return attributes && dimensions && data
+end
+
+
+function build_geography_coordinates(
+        index, encode_cf, errors, log=LOG
+    )
+
+    first_message = first(index)
+    geo_coord_vars = OrderedDict()
+    grid_type = cfgrib.getone(index, "gridType")
+
+    if "geography" in encode_cf && grid_type in GRID_TYPES_DIMENSION_COORDS
+        geo_dims = ("latitude", "longitude")
+        geo_shape = (getone(index, "Ny"), getone(index, "Nx"))
+        latitudes = first_message["distinctLatitudes"]
+        geo_coord_vars["latitude"] = Variable(
+            ("latitude",), latitudes, cfgrib.COORD_ATTRS["latitude"]
+        )
+
+        if latitudes[1] > latitudes[end]
+            geo_coord_vars["latitude"].attributes["stored_direction"] = "decreasing"
+        end
+
+        geo_coord_vars["longitude"] = Variable(
+            ("longitude",),
+            first_message["distinctLongitudes"],
+            cfgrib.COORD_ATTRS["longitude"],
+        )
+    elseif "geography" in encode_cf && grid_type in GRID_TYPES_2D_NON_DIMENSION_COORDS
+        throw("unimplemented")
+    else
+        throw("unimplemented")
+    end
+
+    return geo_dims, geo_shape, geo_coord_vars
+end
+
 function build_variable_components(index, encode_cf=(), filter_by_keys=Dict(), log=LOG, errors="warn", squeeze=true, read_keys=[], time_dims=("time", "step"))
     data_var_attrs_keys = cfgrib.DATA_ATTRIBUTES_KEYS
     data_var_attrs_keys = [data_var_attrs_keys; get(cfgrib.GRID_TYPE_MAP, index["gridType"][1], [])]
     data_var_attrs_keys = [data_var_attrs_keys; read_keys]
 
-    data_var_attrs = enforce_unique_attributes(var_index, data_var_attrs_keys, filter_by_keys)
+    data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
 
     coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
 
-    coord_name_keymap = Dict()
+    coord_name_key_map = Dict()
     coord_vars = OrderedDict()
 
     for coord_key in coords_map
+        values = index[coord_key]
+        if length(values) == 1 && ismissing(values[1])
+            #  TODO: Add logging
+            #  @warn "Missing from GRIB Stream $(coord_key)"
+            continue
+        end
+
+        coord_name = coord_key
+
+        if ("vertical" in encode_cf && coord_key == "level" && haskey(data_var_attrs, "GRIB_typeOfLevel"))
+            coord_name = data_var_attrs["GRIB_typeOfLevel"]
+            coord_name_key_map[coord_name] = coord_key
+        end
+
+        attributes = Dict(
+            "long_name" => "original GRIB coordinate for key: $(coord_key)($(coord_name))",
+            "units"     => "1",
+        )
+
+        merge!(attributes, copy(get(cfgrib.COORD_ATTRS, coord_name, Dict())))
+
+        data = sort(values, rev=get(attributes, "stored_direction", "none") == "decreasing")
+        dimensions = (coord_name, )
+
+        if squeeze && length(values) == 1
+            data = data[1]
+            typeof(data) == Array ? nothing : data = [data]
+            dimensions = ()
+        end
+
+        coord_vars[coord_name] = Variable(dimensions, data, attributes)
     end
+
+    header_dimensions = Tuple(d for (d, c) in pairs(coord_vars) if !squeeze || length(c.data) > 1)
+    header_shape = Tuple(size(coord_vars[d].data) for d in header_dimensions)
+
+    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(index, encode_cf, errors)
+
+    dimensions = (header_dimensions..., geo_dims)
+    shape = (header_shape..., geo_shape)
+
+    merge!(coord_vars, geo_coord_vars)
+
+    offsets = OrderedDict{NTuple{length(header_dimensions), Int64}, Int}()
+    for (header_values, offset) in index.offsets
+        header_indexes = Array{Int}(undef, length(header_dimensions))
+        for (i, dim) in enumerate(header_dimensions)
+            coord_name = get(coord_name_key_map, dim, dim)
+            coord_idx = findfirst(index.index_keys .== coord_name)
+            header_value = header_values[coord_idx]
+            header_indexes[i] = findfirst(coord_vars[dim].data .== header_value)
+        end
+
+        offsets[Tuple(header_indexes)] = offset
+    end
+
+    return offsets
+
+    return coord_name_key_map
 end
 
-function enforce_unique_attributes(index::cfgrib.FileIndex, attribute_keys::Array, filter_by_keys::Dict)
+function enforce_unique_attributes(
+        index::cfgrib.FileIndex, attribute_keys::Array, filter_by_keys::Dict
+    )
+
     attributes = OrderedDict()
     for key in attribute_keys
         values = index[key]
@@ -35,8 +146,12 @@ function enforce_unique_attributes(index::cfgrib.FileIndex, attribute_keys::Arra
     return attributes
 end
 
+function encode_cf_first(
+        data_var_attrs::OrderedDict,
+        encode_cf::Tuple{Vararg{String}}=("parameter", "time"),
+        time_dims::Tuple{Vararg{String}}=("time", "step")
+    )
 
-function encode_cf_first(data_var_attrs::OrderedDict, encode_cf::Tuple{Vararg{String}}=("parameter", "time"), time_dims::Tuple{Vararg{String}}=("time", "step"))
     coords_map = cfgrib.ENSEMBLE_KEYS
     param_id = get(data_var_attrs, "GRIB_paramId", missing)
     data_var_attrs["long_name"] = "original GRIB paramId: $(param_id)"
@@ -60,7 +175,9 @@ function encode_cf_first(data_var_attrs::OrderedDict, encode_cf::Tuple{Vararg{St
         if issubset(time_dims, cfgrib.ALL_REF_TIME_KEYS)
             append!(coords_map, time_dims)
         else
-            throw("time_dims $(time_dims) is not a subset of $(cfgrib.ALL_REF_TIME_KEYS)")
+            throw("time_dims $(time_dims) is not a subset of " *
+                  "$(cfgrib.ALL_REF_TIME_KEYS)"
+            )
         end
     else
         append!(coords_map, cfgrib.DATA_TIME_KEYS)

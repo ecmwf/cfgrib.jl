@@ -1,7 +1,8 @@
 module cfgrib
 
+include("constants.jl")
+include("cfmessage.jl")
 include("indexing.jl")
-include("dataset_constants.jl")
 include("dataset.jl")
 
 end

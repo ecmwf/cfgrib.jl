@@ -136,30 +136,30 @@ const ALL_KEYS = sort(unique(vcat(
 #  TODO: Include the list of coordinate attributes in docs automatically
 const COORD_ATTRS = Dict(
     # geography
-    "latitude" => Dict(
+    "latitude"             => Dict(
         "units"            => "degrees_north",
         "standard_name"    => "latitude",
         "long_name"        => "latitude"
     ),
-    "longitude" => Dict(
+    "longitude"            => Dict(
         "units"            => "degrees_east",
         "standard_name"    => "longitude",
         "long_name"        => "longitude"
     ),
     # vertical
-    "depthBelowLand" => Dict(
+    "depthBelowLand"       => Dict(
         "units"            => "m",
         "positive"         => "down",
         "long_name"        => "soil depth",
         "standard_name"    => "depth",
     ),
-    "depthBelowLandLayer" => Dict(
+    "depthBelowLandLayer"  => Dict(
         "units"            => "m",
         "positive"         => "down",
         "long_name"        => "soil depth",
         "standard_name"    => "depth",
     ),
-    "hybrid" => Dict(
+    "hybrid"               => Dict(
         "units"            => "1",
         "positive"         => "down",
         "long_name"        => "hybrid level",
@@ -171,51 +171,51 @@ const COORD_ATTRS = Dict(
         "long_name"        => "height above the surface",
         "standard_name"    => "height",
     ),
-    "isobaricInhPa" => Dict(
+    "isobaricInhPa"        => Dict(
         "units"            => "hPa",
         "positive"         => "down",
         "stored_direction" => "decreasing",
         "standard_name"    => "air_pressure",
         "long_name"        => "pressure",
     ),
-    "isobaricInPa" => Dict(
+    "isobaricInPa"         => Dict(
         "units"            => "Pa",
         "positive"         => "down",
         "stored_direction" => "decreasing",
         "standard_name"    => "air_pressure",
         "long_name"        => "pressure",
     ),
-    "isobaricLayer" => Dict(
+    "isobaricLayer"        => Dict(
         "units"            => "Pa",
         "positive"         => "down",
         "standard_name"    => "air_pressure",
         "long_name"        => "pressure",
     ),
     # ensemble
-    "number" => Dict(
+    "number"               => Dict(
         "units"            => "1",
         "standard_name"    => "realization",
         "long_name"        => "ensemble member numerical id",
     ),
     # time
-    "step" => Dict(
-        "units" => "hours",
+    "step"                 => Dict(
+        "units"            => "hours",
         "standard_name"    => "forecast_period",
         "long_name"        => "time since forecast_reference_time",
     ),
-    "time" => Dict(
+    "time"                 => Dict(
         "units"            => "seconds since 1970-01-01T00:00:00",
         "calendar"         => "proleptic_gregorian",
         "standard_name"    => "forecast_reference_time",
         "long_name"        => "initial time of forecast",
     ),
-    "valid_time" => Dict(
+    "valid_time"           => Dict(
         "units"            => "seconds since 1970-01-01T00:00:00",
         "calendar"         => "proleptic_gregorian",
         "standard_name"    => "time",
         "long_name"        => "time",
     ),
-    "verifying_time" => Dict(
+    "verifying_time"       => Dict(
         "units"            => "seconds since 1970-01-01T00:00:00",
         "calendar"         => "proleptic_gregorian",
         "standard_name"    => "time",
@@ -223,5 +223,11 @@ const COORD_ATTRS = Dict(
     ),
 )
 
-
-
+GRID_TYPES_DIMENSION_COORDS = ["regular_ll", "regular_gg"]
+GRID_TYPES_2D_NON_DIMENSION_COORDS = [
+    "rotated_ll",
+    "rotated_gg",
+    "lambert",
+    "albers",
+    "polar_stereographic",
+]
