@@ -1,5 +1,7 @@
-using cfgrib
 using Test
+
+using cfgrib
+
 
 @testset "cfgrib.jl" begin
     @testset "Indexing" begin
@@ -8,5 +10,9 @@ using Test
 
     @testset "CFMessage" begin
         include("cfmessage.jl")
+    end
+
+    @testset "Dataset" begin
+        include("dataset.jl")
     end
 end
