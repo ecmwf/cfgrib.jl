@@ -55,12 +55,23 @@ function build_geography_coordinates(
     return geo_dims, geo_shape, geo_coord_vars
 end
 
-function build_variable_components(index, encode_cf=(), filter_by_keys=Dict(), log=LOG, errors="warn", squeeze=true, read_keys=[], time_dims=("time", "step"))
+
+function build_variable_components(
+        index, encode_cf=(), filter_by_keys=Dict(),
+        log=LOG, errors="warn", squeeze=true, read_keys=[],
+        time_dims=("time", "step")
+    )
     data_var_attrs_keys = cfgrib.DATA_ATTRIBUTES_KEYS
-    data_var_attrs_keys = [data_var_attrs_keys; get(cfgrib.GRID_TYPE_MAP, index["gridType"][1], [])]
+    data_var_attrs_keys = [
+        data_var_attrs_keys;
+        get(cfgrib.GRID_TYPE_MAP, index["gridType"][1], [])
+    ]
     data_var_attrs_keys = [data_var_attrs_keys; read_keys]
 
-    data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys, filter_by_keys)
+    data_var_attrs = enforce_unique_attributes(
+        index, data_var_attrs_keys,
+        filter_by_keys
+    )
 
     coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
 
