@@ -1,6 +1,11 @@
 using DataStructures
 
 
+struct DatasetBuildError <: Exception
+    error_message::String
+end
+
+
 struct Variable
     dimensions::Tuple{Vararg{String}}
     data::Array
@@ -124,27 +129,42 @@ function build_variable_components(index, encode_cf=(), filter_by_keys=Dict(), l
     return coord_name_key_map
 end
 
-function enforce_unique_attributes(
-        index::cfgrib.FileIndex, attribute_keys::Array, filter_by_keys::Dict
-    )
 
+#  TODO: Implement filter_by_keys
+function enforce_unique_attributes(
+        header_values::OrderedDict{String, T} where T <: Array,
+        attribute_keys::Array
+    )
     attributes = OrderedDict()
     for key in attribute_keys
-        values = index[key]
+        values = header_values[key]
 
         if length(values) > 1
-            throw("Attributes are not unique for $key: $(values)")
+            throw(DatasetBuildError(
+                "Attributes are not unique for" *
+                "$key: $(values)"
+            ))
         end
 
         value = values[1]
 
-        if !ismissing(value)
+        if !ismissing(value) && !(value in ["missing", "undef", "unknown"])
             attributes["GRIB_" * key] = value
         end
     end
 
     return attributes
 end
+
+#  TODO: Implement filter_by_keys
+function enforce_unique_attributes(index::FileIndex, attribute_keys::Array)
+    attributes = enforce_unique_attributes(
+        index.header_value, attribute_keys
+    )
+
+    return attributes
+end
+
 
 function encode_cf_first(
         data_var_attrs::OrderedDict,
