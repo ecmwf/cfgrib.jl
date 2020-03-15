@@ -24,3 +24,25 @@ function from_grib_date_time(
 
     return from_grib_date_time(date, time)
 end
+
+#  TODO: This probably won't work translated directly from python
+#  check cases where time and step are effectively missing
+function build_valid_time(time::Array{Int, 1}, step::Int)
+    step_s = step * 3600
+
+    if length(size(time)) == 0 && length(size(step)) == 0
+        data = time + step_s
+        dims = Tuple{String}(("", ))
+    elseif length(size(time)) > 0 && length(size(step)) == 0
+        data = time + step_s
+        dims = ("time", )
+    elseif length(size(time)) == 0 && length(size(step)) > 0
+        data = time + step_s
+        dims = ("step", )
+    else
+        data = time .+ step_s
+        dims = ("time", "step")
+    end
+
+    return dims, data
+end
