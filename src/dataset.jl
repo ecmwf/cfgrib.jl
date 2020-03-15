@@ -6,10 +6,24 @@ struct DatasetBuildError <: Exception
 end
 
 
+#  TODO: build_array && getindex
+struct OnDiskArray
+    grib_path::String
+    size::Tuple
+    offsets::OrderedDict
+    missing_value::Any
+    geo_ndim::Int
+    dtype::Type
+end
+
+Base.size(a::OnDiskArray) = a.size
+
+
+#  TODO: Use parametric struct instead of any
 struct Variable
     dimensions::Tuple{Vararg{String}}
-    data::Array
-    attributes::Dict{String, String}
+    data::Union{Array, OnDiskArray}
+    attributes::Dict{String, Any}
 end
 
 function Base.:(==)(a::Variable, b::Variable)
