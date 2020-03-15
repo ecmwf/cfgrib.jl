@@ -38,7 +38,8 @@ function build_geography_coordinates(
         )
 
         if latitudes[1] > latitudes[end]
-            geo_coord_vars["latitude"].attributes["stored_direction"] = "decreasing"
+            geo_coord_vars["latitude"].attributes["stored_direction"] =
+                "decreasing"
         end
 
         geo_coord_vars["longitude"] = Variable(
@@ -88,19 +89,24 @@ function build_variable_components(
 
         coord_name = coord_key
 
-        if ("vertical" in encode_cf && coord_key == "level" && haskey(data_var_attrs, "GRIB_typeOfLevel"))
+        if ("vertical" in encode_cf && coord_key == "level"
+                && haskey(data_var_attrs, "GRIB_typeOfLevel"))
             coord_name = data_var_attrs["GRIB_typeOfLevel"]
             coord_name_key_map[coord_name] = coord_key
         end
 
         attributes = Dict(
-            "long_name" => "original GRIB coordinate for key: $(coord_key)($(coord_name))",
+            "long_name" => "original GRIB coordinate for key:" *
+                           "$(coord_key)($(coord_name))",
             "units"     => "1",
         )
 
         merge!(attributes, copy(get(cfgrib.COORD_ATTRS, coord_name, Dict())))
 
-        data = sort(values, rev=get(attributes, "stored_direction", "none") == "decreasing")
+        data = sort(
+            values,
+            rev=get(attributes, "stored_direction", "none") == "decreasing"
+        )
         dimensions = (coord_name, )
 
         if squeeze && length(values) == 1
@@ -112,10 +118,15 @@ function build_variable_components(
         coord_vars[coord_name] = Variable(dimensions, data, attributes)
     end
 
-    header_dimensions = Tuple(d for (d, c) in pairs(coord_vars) if !squeeze || length(c.data) > 1)
+    header_dimensions = Tuple(
+        d for (d, c)
+        in pairs(coord_vars)
+        if !squeeze || length(c.data) > 1
+    )
     header_shape = Tuple(size(coord_vars[d].data) for d in header_dimensions)
 
-    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(index, encode_cf, errors)
+    geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(
+        index, encode_cf, errors)
 
     dimensions = (header_dimensions..., geo_dims)
     shape = (header_shape..., geo_shape)
