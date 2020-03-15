@@ -273,3 +273,28 @@ function build_variable_components(
 
     return dims, data_var, coord_vars
 end
+
+
+function build_dataset_components(
+        index, errors="warn",
+        encode_cf=("parameter", "time", "geography", "vertical"),
+        squeeze=true, log=LOG, read_keys=[], time_dims=("time", "step")
+    )
+
+    dimensions = OrderedDict()
+    variables = OrderedDict()
+    for param_id in index["paramId"]
+        var_index = filter(index, paramId=param_id)
+        dims, data_var, coord_vars = build_variable_components(
+            var_index,
+            encode_cf,
+            errors=errors,
+            squeeze=squeeze,
+            read_keys=read_keys,
+            time_dims=time_dims,
+        )
+
+        short_name = data_var.attributes.get("GRIB_shortName", "paramId_%d" % param_id)
+        var_name = data_var.attributes.get("GRIB_cfVarName", "unknown")
+    end
+end
