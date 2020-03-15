@@ -188,9 +188,3 @@ function first(index::FileIndex)
         return Message(f)
     end
 end
-
-
-#  TODO: Implement subindex/filtering
-function filter()
-    throw("unimplemented")
-end
