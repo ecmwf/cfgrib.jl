@@ -137,7 +137,11 @@ function build_variable_components(
         in pairs(coord_vars)
         if !squeeze || length(c.data) > 1
     )
-    header_shape = Tuple(size(coord_vars[d].data) for d in header_dimensions)
+    #  Loses information on which shape belongs to which dimension
+    #  doesn't seem to matter though
+    header_shape = Iterators.flatten(
+        Tuple(size(coord_vars[d].data) for d in header_dimensions)
+    )
 
     geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(
         index, encode_cf, errors)
@@ -160,9 +164,34 @@ function build_variable_components(
         offsets[Tuple(header_indexes)] = offset
     end
 
-    return offsets
+    data = OnDiskArray(
+        path,
+        shape,
+        offsets,
+        missing,
+        length(geo_dims),
+        Float32
+    )
 
-    return coord_name_key_map
+    if haskey(coord_vars, "time") && haskey(coord_vars, "step")
+        # add the 'valid_time' secondary coordinate
+        dims, time_data = build_valid_time(
+            coord_vars["time"].data,
+            coord_vars["step"].data
+        )
+        attrs = cfgrib.COORD_ATTRS["valid_time"]
+        coord_vars["valid_time"] = Variable(dims, time_data, attrs)
+    end
+
+    data_var_attrs["coordinates"] = join(keys(coord_vars), " ")
+    data_var = Variable(dimensions, data, data_var_attrs)
+    dims = OrderedDict(
+        (d => s)
+        for (d, s)
+        in zip(dimensions, size(data_var.data))
+    )
+
+    return dims, data_var, coord_vars
 end
 
 
