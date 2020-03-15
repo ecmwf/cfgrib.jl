@@ -15,7 +15,10 @@ function from_grib_date_time(date::Int, time::Int; epoch=DEFAULT_EPOCH)
     return Dates.value(Dates.Second(data_datetime - epoch))
 end
 
-function from_grib_date_time(message::GRIB.Message, date_key="dataDate", time_key="dataTime", epoch=DEFAULT_EPOCH)
+function from_grib_date_time(
+        message::GRIB.Message, date_key="dataDate",
+        time_key="dataTime", epoch=DEFAULT_EPOCH
+    )
     date = message[date_key]
     time = message[time_key]
 

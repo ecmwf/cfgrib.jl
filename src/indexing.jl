@@ -28,7 +28,7 @@ mutable struct FileIndex
     index_path::String
 
     index_keys::Array{String, 1}
-    offsets::Array
+    offsets::Array  # TODO: Specify offset type better
     header_values::OrderedDict{String, Array}
 
     filter_by_keys::Dict
@@ -163,7 +163,11 @@ end
 function get_header_values!(index::FileIndex)
     header_values = OrderedDict{String, Array}()
     for key in index.index_keys
-        header_values[key] = unique([offset[1][Symbol(key)] for offset in index.offsets])
+        header_values[key] = unique([
+            offset[1][Symbol(key)]
+            for offset
+            in index.offsets
+        ])
     end
 
     index.header_values = header_values
