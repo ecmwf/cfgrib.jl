@@ -65,7 +65,7 @@ end
 #  TODO: Implement filter_by_keys
 function enforce_unique_attributes(index::FileIndex, attribute_keys::Array)
     attributes = enforce_unique_attributes(
-        index.header_value, attribute_keys
+        index.header_values, attribute_keys
     )
 
     return attributes
@@ -117,7 +117,7 @@ end
 
 
 function build_geography_coordinates(
-        index, encode_cf, errors, log=LOG
+        index, encode_cf, errors; log=LOG
     )
 
     first_message = first(index)
@@ -152,8 +152,9 @@ function build_geography_coordinates(
 end
 
 
+#  TODO: Add filter_by_keys
 function build_variable_components(
-        index, encode_cf=(), filter_by_keys=Dict(),
+        index; encode_cf=("parameter", "time", "geography", "vertical"),
         log=LOG, errors="warn", squeeze=true, read_keys=[],
         time_dims=("time", "step")
     )
@@ -164,10 +165,7 @@ function build_variable_components(
     ]
     data_var_attrs_keys = [data_var_attrs_keys; read_keys]
 
-    data_var_attrs = enforce_unique_attributes(
-        index, data_var_attrs_keys,
-        filter_by_keys
-    )
+    data_var_attrs = enforce_unique_attributes(index, data_var_attrs_keys)
 
     coords_map = encode_cf_first(data_var_attrs, encode_cf, time_dims)
 
@@ -225,7 +223,8 @@ function build_variable_components(
     )
 
     geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(
-        index, encode_cf, errors)
+        index, encode_cf, errors; log=log
+    )
 
     dimensions = (header_dimensions..., geo_dims)
     shape = (header_shape..., geo_shape)
