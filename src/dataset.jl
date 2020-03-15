@@ -35,6 +35,87 @@ function Base.:(==)(a::Variable, b::Variable)
 end
 
 
+#  TODO: Implement filter_by_keys
+function enforce_unique_attributes(
+        header_values::OrderedDict{String, T} where T <: Array,
+        attribute_keys::Array
+    )
+    attributes = OrderedDict()
+    for key in attribute_keys
+        values = header_values[key]
+
+        if length(values) > 1
+            throw(DatasetBuildError(
+                "Attributes are not unique for" *
+                "$key: $(values)"
+            ))
+        end
+
+        value = values[1]
+
+        if !ismissing(value) && !(value in ["missing", "undef", "unknown"])
+            attributes["GRIB_" * key] = value
+        end
+    end
+
+    return attributes
+end
+
+
+#  TODO: Implement filter_by_keys
+function enforce_unique_attributes(index::FileIndex, attribute_keys::Array)
+    attributes = enforce_unique_attributes(
+        index.header_value, attribute_keys
+    )
+
+    return attributes
+end
+
+
+function encode_cf_first(
+        data_var_attrs::OrderedDict,
+        encode_cf::Tuple{Vararg{String}}=("parameter", "time"),
+        time_dims::Tuple{Vararg{String}}=("time", "step")
+    )
+
+    coords_map = cfgrib.ENSEMBLE_KEYS
+    param_id = get(data_var_attrs, "GRIB_paramId", missing)
+    data_var_attrs["long_name"] = "original GRIB paramId: $(param_id)"
+    data_var_attrs["units"] = "1"
+
+    if "parameter" in encode_cf
+        if haskey(data_var_attrs, "GRIB_paramId")
+            data_var_attrs["standard_name"] = data_var_attrs["GRIB_cfName"]
+        end
+
+        if haskey(data_var_attrs, "GRIB_name")
+            data_var_attrs["long_name"] = data_var_attrs["GRIB_name"]
+        end
+
+        if haskey(data_var_attrs, "GRIB_units")
+            data_var_attrs["units"] = data_var_attrs["GRIB_units"]
+        end
+    end
+
+    if "time" in encode_cf
+        if issubset(time_dims, cfgrib.ALL_REF_TIME_KEYS)
+            append!(coords_map, time_dims)
+        else
+            throw("time_dims $(time_dims) is not a subset of " *
+                  "$(cfgrib.ALL_REF_TIME_KEYS)"
+            )
+        end
+    else
+        append!(coords_map, cfgrib.DATA_TIME_KEYS)
+    end
+
+    append!(coords_map, cfgrib.VERTICAL_KEYS)
+    append!(coords_map, cfgrib.SPECTRA_KEYS)
+
+    return coords_map
+end
+
+
 function build_geography_coordinates(
         index, encode_cf, errors, log=LOG
     )
@@ -192,84 +273,4 @@ function build_variable_components(
     )
 
     return dims, data_var, coord_vars
-end
-
-
-#  TODO: Implement filter_by_keys
-function enforce_unique_attributes(
-        header_values::OrderedDict{String, T} where T <: Array,
-        attribute_keys::Array
-    )
-    attributes = OrderedDict()
-    for key in attribute_keys
-        values = header_values[key]
-
-        if length(values) > 1
-            throw(DatasetBuildError(
-                "Attributes are not unique for" *
-                "$key: $(values)"
-            ))
-        end
-
-        value = values[1]
-
-        if !ismissing(value) && !(value in ["missing", "undef", "unknown"])
-            attributes["GRIB_" * key] = value
-        end
-    end
-
-    return attributes
-end
-
-#  TODO: Implement filter_by_keys
-function enforce_unique_attributes(index::FileIndex, attribute_keys::Array)
-    attributes = enforce_unique_attributes(
-        index.header_value, attribute_keys
-    )
-
-    return attributes
-end
-
-
-function encode_cf_first(
-        data_var_attrs::OrderedDict,
-        encode_cf::Tuple{Vararg{String}}=("parameter", "time"),
-        time_dims::Tuple{Vararg{String}}=("time", "step")
-    )
-
-    coords_map = cfgrib.ENSEMBLE_KEYS
-    param_id = get(data_var_attrs, "GRIB_paramId", missing)
-    data_var_attrs["long_name"] = "original GRIB paramId: $(param_id)"
-    data_var_attrs["units"] = "1"
-
-    if "parameter" in encode_cf
-        if haskey(data_var_attrs, "GRIB_paramId")
-            data_var_attrs["standard_name"] = data_var_attrs["GRIB_cfName"]
-        end
-
-        if haskey(data_var_attrs, "GRIB_name")
-            data_var_attrs["long_name"] = data_var_attrs["GRIB_name"]
-        end
-
-        if haskey(data_var_attrs, "GRIB_units")
-            data_var_attrs["units"] = data_var_attrs["GRIB_units"]
-        end
-    end
-
-    if "time" in encode_cf
-        if issubset(time_dims, cfgrib.ALL_REF_TIME_KEYS)
-            append!(coords_map, time_dims)
-        else
-            throw("time_dims $(time_dims) is not a subset of " *
-                  "$(cfgrib.ALL_REF_TIME_KEYS)"
-            )
-        end
-    else
-        append!(coords_map, cfgrib.DATA_TIME_KEYS)
-    end
-
-    append!(coords_map, cfgrib.VERTICAL_KEYS)
-    append!(coords_map, cfgrib.SPECTRA_KEYS)
-
-    return coords_map
 end
