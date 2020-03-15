@@ -36,9 +36,6 @@ mutable struct FileIndex
     FileIndex() = new(v"0.0.0")
 end
 
-
-#  Constructors
-
 function FileIndex(grib_path::String, index_keys::Array{String, 1})
     fileindex = FileIndex()
     fileindex.grib_path = grib_path
@@ -56,12 +53,10 @@ function FileIndex(grib_path::String, index_keys::Array{String, 1})
     return fileindex
 end
 
-
-#  Base function dispatch
-
 function Base.getindex(obj::FileIndex, key)
     return obj.header_values[key]
 end
+
 
 function filter_offsets(index::FileIndex; query...)
     filtered_offsets = Array{Pair{Any,Any},1}()
@@ -102,8 +97,6 @@ function filter!(index::FileIndex; query...)
 end
 
 
-#  Functions
-
 function index_path!(index::FileIndex)
     index_keys_hash = hash(
         join([index.index_keys..., index.allowed_protocol_version])
@@ -112,6 +105,7 @@ function index_path!(index::FileIndex)
     index.index_path = ".$(index.grib_path).$index_keys_hash.idx"
 end
 
+
 function save_indexfile(index::FileIndex)
     throw("unimplemented")
 end
@@ -119,6 +113,7 @@ end
 function from_indexfile!(index::FileIndex)
     throw("unimplemented")
 end
+
 
 function from_gribfile!(index::FileIndex)
     offsets = OrderedDict()
@@ -160,6 +155,7 @@ function from_gribfile!(index::FileIndex)
     index.offsets = collect(pairs(offsets))
 end
 
+
 function get_header_values!(index::FileIndex)
     header_values = OrderedDict{String, Array}()
     for key in index.index_keys
@@ -173,6 +169,7 @@ function get_header_values!(index::FileIndex)
     index.header_values = header_values
 end
 
+
 function getone(index::FileIndex, item)
     values = index[item]
 
@@ -183,6 +180,7 @@ function getone(index::FileIndex, item)
     return values[1]
 end
 
+
 function first(index::FileIndex)
     GribFile(index.grib_path) do f
         first_offset = index.offsets[1][2][1]
@@ -190,6 +188,7 @@ function first(index::FileIndex)
         return Message(f)
     end
 end
+
 
 #  TODO: Implement subindex/filtering
 function filter()
