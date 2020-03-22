@@ -46,7 +46,7 @@ function enforce_unique_attributes(
 
         if length(values) > 1
             throw(DatasetBuildError(
-                "Attributes are not unique for" *
+                "Attributes are not unique for " *
                 "$key: $(values)"
             ))
         end
@@ -145,7 +145,25 @@ function build_geography_coordinates(
     elseif "geography" in encode_cf && grid_type in GRID_TYPES_2D_NON_DIMENSION_COORDS
         throw("unimplemented")
     else
-        throw("unimplemented")
+        geo_dims = ("values", )
+        geo_shape = (getone(index, "numberOfPoints"), )
+        try
+            latitude = first_message["latitudes"]
+            geo_coord_vars["latitude"] = Variable(
+                ("values", ),
+                latitude,
+                COORD_ATTRS["latitude"]
+            )
+
+            longitude = first_message["longitudes"]
+            geo_coord_vars["longitude"] = Variable(
+                ("values", ),
+                longitude,
+                COORD_ATTRS["longitude"]
+            )
+        catch e
+            rethrow(e)
+        end
     end
 
     return geo_dims, geo_shape, geo_coord_vars
@@ -153,8 +171,9 @@ end
 
 
 #  TODO: Add filter_by_keys
+#  TODO: Add filter_by_keys
 function build_variable_components(
-        index; encode_cf=("parameter", "time", "geography", "vertical"),
+        index; encode_cf=(),
         log=LOG, errors="warn", squeeze=true, read_keys=[],
         time_dims=("time", "step")
     )
@@ -226,8 +245,8 @@ function build_variable_components(
         index, encode_cf, errors; log=log
     )
 
-    dimensions = (header_dimensions..., geo_dims)
-    shape = (header_shape..., geo_shape)
+    dimensions = (header_dimensions..., geo_dims...)
+    shape = (header_shape..., geo_shape...)
 
     merge!(coord_vars, geo_coord_vars)
 
@@ -245,7 +264,7 @@ function build_variable_components(
     end
 
     data = OnDiskArray(
-        path,
+        index.grib_path,
         shape,
         offsets,
         missing,
