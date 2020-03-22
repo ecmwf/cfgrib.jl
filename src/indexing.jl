@@ -29,6 +29,7 @@ mutable struct FileIndex
 
     index_keys::Array{String, 1}
     offsets::Array  # TODO: Specify offset type better
+    message_lengths::Array{Int, 1}
     header_values::OrderedDict{String, Array}
 
     filter_by_keys::Dict
@@ -128,7 +129,8 @@ function from_gribfile!(index::FileIndex)
     #  based on gribfile.nmessages w/ known-length arrays
     #  more, or if I/O overhead too large
     GribFile(index.grib_path) do f
-        for message in f
+        message_lengths = Array{Int, 1}(undef, f.nmessages)
+        for (nmessage, message) in enumerate(f)
             header_values = Array{Any}(undef, index_key_count)
             for (i, key) in enumerate(index_keys)
                 value = haskey(message, key) ? message[key] : missing
@@ -148,8 +150,10 @@ function from_gribfile!(index::FileIndex)
                 offset_field = offset
             end
 
+            message_lengths[nmessage] = Int(message["totalLength"])
             offsets[HeaderTuple(header_values)] = offset_field
         end
+        index.message_lengths = message_lengths
     end
 
     index.offsets = collect(pairs(offsets))
@@ -184,7 +188,18 @@ end
 function first(index::FileIndex)
     GribFile(index.grib_path) do f
         first_offset = index.offsets[1][2][1]
-        seek(f, first_offset)
+        #  There is a discrepancy between how offsets are defined and used in
+        #  cfgrib with the GRIB file seek method and in the Julia GRIB package,
+        #  in Julia seek seeks through the messages themselves not the acutal
+        #  offset values. Here we use the cumulative sum of the message lengths
+        #  to work out which message an offset value is in.
+        #
+        #  TODO: This is probably due to me making a mistake, don't know enough
+        #  about GRIB spec to figure out how this should be done, get ECMWF
+        #  help with this
+        message_length_cumsum = cumsum(index.message_lengths)
+        offset_message_index = findfirst(message_length_cumsum .> first_offset) - 1
+        seek(f, offset_message_index)
         return Message(f)
     end
 end
