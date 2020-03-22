@@ -46,8 +46,8 @@ dfi = dummy_file_index()
 #  add the field to this list
 @test fieldnames(cfgrib.FileIndex) == (
     :allowed_protocol_version, :grib_path, :index_path, :index_keys, :offsets,
-    :header_values, :filter_by_keys
-    )
+    :message_lengths, :header_values, :filter_by_keys
+)
 
 #  If this fails, check that any changes to the code are
 #  reflected in the tests
@@ -71,6 +71,19 @@ expected_header_values = OrderedDict(
     "one_here" => Union{Missing, Int64}[20, missing]
 )
 @test isequal(dfi.header_values, expected_header_values)
+
+@testset begin
+    test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
+
+    index = cfgrib.FileIndex(
+        test_file,
+        cfgrib.ALL_KEYS
+    )
+
+    message = cfgrib.first(index)
+
+    cfgrib.filter!(index, paramId=130)
+end
 
 #  Not implemented yet
 @test_skip cfgrib.save_indexfile!(dfi)
