@@ -20,6 +20,20 @@ using DataStructures
 end
 
 
+@testset "OnDiskArray" begin
+    oda = cfgrib.OnDiskArray(
+        "some_path",
+        (4, 3, 2, 1),
+        OrderedDict(),
+        missing,
+        10,
+        Float32
+    )
+
+    @assert size(oda) == oda.size
+end
+
+
 @testset "Variable" begin
     res = cfgrib.Variable(
         ("lat", ),
@@ -29,6 +43,7 @@ end
 
     @test res == res
 end
+
 
 @testset "build_data_var_components_no_encode" begin
     test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
@@ -45,28 +60,45 @@ end
 
     @test index["paramId"] == [130]
 
-    @test_skip "build_geography_coordinates breaks with paramId 130"
+    dims, data_var, coord_vars = cfgrib.build_variable_components(
+        index; log=missing
+    )
 
-    # dims, data_var, coord_vars = cfgrib.build_variable_components(
-    #     index; log=missing
-    # )
+    @test dims == OrderedDict(
+        "number" => 10,
+        "dataDate" => 2,
+        "dataTime" => 2,
+        "level" => 2,
+        "values" => 7320
+    )
 
-    # @test dims == {'number': 10, 'dataDate': 2, 'dataTime': 2, 'level': 2, 'values': 7320}
+    @test size(data_var.data) == (10, 2, 2, 2, 7320)
 end
 
-# const dir_tests = abspath(joinpath(dirname(pathof(cfgrib)), "..", "tests"))
-# const dir_testfiles = abspath(joinpath(dir_tests, "sample-data"))
+@testset "build_data_var_components_encode_cf_geography" begin
+    test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
 
-# test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
+    index = cfgrib.FileIndex(
+        test_file,
+        cfgrib.ALL_KEYS
+    )
 
-# index = cfgrib.FileIndex(
-#     test_file,
-#     cfgrib.ALL_KEYS
-# )
+    cfgrib.filter!(index, paramId=130)
 
+    @test index["paramId"] == [130]
 
-# cfgrib.filter!(index, paramId=130)
+    dims, data_var, coord_vars = cfgrib.build_variable_components(
+        index; encode_cf=("geography", ), log=missing
+    )
 
-# dims, data_var, coord_vars = cfgrib.build_variable_components(
-#     index; log=missing
-# )
+    @test dims == OrderedDict(
+        "number"    => 10,
+        "dataDate"  => 2,
+        "dataTime"  => 2,
+        "level"     => 2,
+        "latitude"  => 61,
+        "longitude" => 120
+    )
+
+    @test size(data_var.data) == (10, 2, 2, 2, 61, 120)
+end
