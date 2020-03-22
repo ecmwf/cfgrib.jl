@@ -31,7 +31,7 @@ function build_valid_time(time::Int, step::Int)
     step_s = step * 3600
 
     data = time + step_s
-    dims = Tuple{String}(("", ))
+    dims = ()
 
     return dims, data
 end
@@ -57,15 +57,14 @@ end
 function build_valid_time(time::Array{Int, 1}, step::Array{Int, 1})
     step_s = step * 3600
 
-    if size(time) == size(step)
-        data = time + step_s
-        dims = ("time", "step")
-        return dims, data
-    elseif length(unique(step)) == 1
-        return build_valid_time(time, step_s[1])
-    else
-        throw(DimensionMismatch("cannot build valid time, time and step shape"*
-                                " not compatible:" *
-                                " time ($(size(time))), step ($(size(time)))"))
+    if length(time) == 1 && length(step) == 1
+        return build_valid_time(time[1], step[1])
     end
+
+    #  TODO: Julia is column major, numpy is row major, not too sure what
+    #  the correct approach would be here...
+    data = time' .+ step_s
+    dims = ("time", "step")
+    return dims, data
+
 end
