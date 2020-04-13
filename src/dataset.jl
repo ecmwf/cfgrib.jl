@@ -6,7 +6,7 @@ struct DatasetBuildError <: Exception
 end
 
 
-#  TODO: build_array && getindex
+#  TODO: build_array
 struct OnDiskArray
     grib_path::String
     size::Tuple
@@ -17,7 +17,49 @@ struct OnDiskArray
     dtype::Type
 end
 
-Base.size(a::OnDiskArray) = a.size
+expand_key(key, shape) = Tuple((1:l)[k] for (k, l) in zip(key, shape))
+
+Base.size(A::OnDiskArray) = A.size
+
+Base.axes(A::OnDiskArray) = Tuple(Base.OneTo(i) for i in size(A))
+Base.axes(A::OnDiskArray, d::Int) = axes(A)[d]
+
+Base.convert(::Type{T}, A::OnDiskArray) where T <: Array = A[repeat([Colon()], length(size(A)))...]
+
+#  TODO: Use propper `to_indices`, add boundscheck
+function Base.getindex(obj::OnDiskArray, key...)
+    expanded_keys = expand_key(key, size(obj))
+    #  Geograpyh dims (e.g. lat, lon) are on the end and need to be loaded fully
+    #  returned, so only look at the other dimensions
+    header_items = expanded_keys[1:end-obj.geo_ndim]
+    array_field_shape = (
+        (length(l) for l in header_items)..., size(obj)[end-obj.geo_ndim+1:end]...
+    )
+    array_field = Array{obj.dtype}(undef, array_field_shape...)
+
+    geo_ndim_idx = repeat([Colon()], obj.geo_ndim)
+
+    GribFile(obj.grib_path) do file
+        message_length_cumsum = cumsum(obj.message_lengths)
+        for (header_indexes, offset) in pairs(obj.offsets)
+            array_field_indexes = [
+                findall(it .== ix)
+                for (it, ix)
+                in zip(header_items, header_indexes)
+            ]
+
+            offset_message_index = findfirst(message_length_cumsum .> offset) - 1
+            seek(file, offset_message_index)
+            message = Message(file)
+            values = message["values"]
+            array_field[array_field_indexes..., geo_ndim_idx...] = values
+        end
+    end
+
+    #  TODO: Skipped some sections fo the python equivalent code as I don't get
+    #  what they're for. Should check this out later
+    return getindex(array_field, key...)
+end
 
 
 #  TODO: Use parametric struct instead of any
@@ -126,8 +168,19 @@ function build_geography_coordinates(
     grid_type = cfgrib.getone(index, "gridType")
 
     if "geography" in encode_cf && grid_type in GRID_TYPES_DIMENSION_COORDS
-        geo_dims = ("latitude", "longitude")
-        geo_shape = (getone(index, "Ny"), getone(index, "Nx"))
+
+        column_major = getone(index, "jPointsAreConsecutive") != 0
+        #  TODO: column/row major has always confused me, not sure if this
+        #  is the correct approach here. Idea is taken from how GRIB.jl
+        #  handles reading data with `codes_grib_get_data`:
+        #  https://github.com/weech/GRIB.jl/blob/5710a1f462e888ad38f6e3b282df3fb953478d1b/src/message.jl#L355
+        if column_major
+            geo_dims = ("latitude", "longitude")
+            geo_shape = (getone(index, "Ny"), getone(index, "Nx"))
+        else
+            geo_dims = ("longitude", "latitude")
+            geo_shape = (getone(index, "Nx"), getone(index, "Ny"))
+        end
         latitudes = first_message["distinctLatitudes"]
         geo_coord_vars["latitude"] = Variable(
             ("latitude",), latitudes, cfgrib.COORD_ATTRS["latitude"]
@@ -171,7 +224,6 @@ function build_geography_coordinates(
 end
 
 
-#  TODO: Add filter_by_keys
 #  TODO: Add filter_by_keys
 function build_variable_components(
         index; encode_cf=(),

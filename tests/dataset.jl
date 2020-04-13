@@ -25,12 +25,13 @@ end
         "some_path",
         (4, 3, 2, 1),
         OrderedDict(),
+        [1,2,3],
         missing,
         10,
         Float32
     )
 
-    @assert size(oda) == oda.size
+    @test size(oda) == oda.size
 end
 
 
@@ -73,6 +74,10 @@ end
     )
 
     @test size(data_var.data) == (10, 2, 2, 2, 7320)
+
+    data = convert(Array, data_var.data)
+
+    @test sum(data) > 0
 end
 
 @testset "build_data_var_components_encode_cf_geography" begin
@@ -96,9 +101,15 @@ end
         "dataDate"  => 2,
         "dataTime"  => 2,
         "level"     => 2,
-        "latitude"  => 61,
-        "longitude" => 120
+        "longitude" => 120,
+        "latitude"  => 61
     )
 
-    @test size(data_var.data) == (10, 2, 2, 2, 61, 120)
+    #  TODO: Another area where the row/column major issue affects how the
+    #  longitude/latitude area accessed
+    @test size(data_var.data) == (10, 2, 2, 2, 120, 61)
+
+    data = convert(Array, data_var.data)
+
+    @test sum(data) > 0
 end
