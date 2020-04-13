@@ -14,13 +14,13 @@ function dummy_offsets()
 
     message2 = (
         int    = 10,
-        array  = [1,2,3, 5],
+        array  = [1,2,3,5],
         string = "cabbage",
         absent = missing,
         one_here = missing
     )
 
-    dummy_offsets = Dict(
+    dummy_offsets = OrderedDict(
         message1 => 0,
         message2 => 10_000
     )
