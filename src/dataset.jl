@@ -11,6 +11,7 @@ struct OnDiskArray
     grib_path::String
     size::Tuple
     offsets::OrderedDict
+    message_lengths::Array{Int, 1} #  TODO: Fix seek offset issue
     missing_value::Any
     geo_ndim::Int
     dtype::Type
@@ -267,6 +268,7 @@ function build_variable_components(
         index.grib_path,
         shape,
         offsets,
+        index.message_lengths,  #  TODO: Fix seek offset issue
         missing,
         length(geo_dims),
         Float32
