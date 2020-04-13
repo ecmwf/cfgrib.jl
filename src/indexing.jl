@@ -186,20 +186,20 @@ end
 
 
 function first(index::FileIndex)
-    GribFile(index.grib_path) do f
+    GribFile(index.grib_path) do file
         first_offset = index.offsets[1][2][1]
-        #  There is a discrepancy between how offsets are defined and used in
-        #  cfgrib with the GRIB file seek method and in the Julia GRIB package,
-        #  in Julia seek seeks through the messages themselves not the acutal
-        #  offset values. Here we use the cumulative sum of the message lengths
-        #  to work out which message an offset value is in.
+        #  There is a discrepancy between how offsets are defined and used
+        #  in cfgrib with the GRIB file seek method and in the Julia GRIB
+        #  package, in Julia seek seeks through the messages themselves not
+        #  the acutal offset values. Here we use the cumulative sum of the
+        #  message lengths to work out which message an offset value is in.
         #
-        #  TODO: This is probably due to me making a mistake, don't know enough
-        #  about GRIB spec to figure out how this should be done, get ECMWF
-        #  help with this
+        #  TODO: This is probably due to me making a mistake, don't know
+        #  enough about GRIB spec to figure out how this should be done, get
+        #  ECMWF help with this
         message_length_cumsum = cumsum(index.message_lengths)
         offset_message_index = findfirst(message_length_cumsum .> first_offset) - 1
-        seek(f, offset_message_index)
-        return Message(f)
+        seek(file, offset_message_index)
+        return Message(file)
     end
 end
