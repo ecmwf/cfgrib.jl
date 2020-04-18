@@ -160,7 +160,7 @@ end
 
 
 function build_geography_coordinates(
-        index, encode_cf, errors; log=LOG
+        index, encode_cf, errors
     )
 
     first_message = first(index)
@@ -227,7 +227,7 @@ end
 #  TODO: Add filter_by_keys
 function build_variable_components(
         index; encode_cf=(),
-        log=LOG, errors="warn", squeeze=true, read_keys=[],
+        errors="warn", squeeze=true, read_keys=[],
         time_dims=("time", "step")
     )
     data_var_attrs_keys = cfgrib.DATA_ATTRIBUTES_KEYS
@@ -295,7 +295,7 @@ function build_variable_components(
     )
 
     geo_dims, geo_shape, geo_coord_vars = build_geography_coordinates(
-        index, encode_cf, errors; log=log
+        index, encode_cf, errors
     )
 
     dimensions = (header_dimensions..., geo_dims...)
@@ -349,9 +349,9 @@ end
 
 
 function build_dataset_components(
-        index, errors="warn",
+        index; errors="warn",
         encode_cf=("parameter", "time", "geography", "vertical"),
-        squeeze=true, log=LOG, read_keys=[], time_dims=("time", "step")
+        squeeze=true, read_keys=[], time_dims=("time", "step")
     )
 
     dimensions = OrderedDict()

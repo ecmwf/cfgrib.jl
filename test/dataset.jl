@@ -60,9 +60,9 @@ end
     cfgrib.filter!(index, paramId=130)
 
     @test index["paramId"] == [130]
-
+    #  TODO: Add logging
     dims, data_var, coord_vars = cfgrib.build_variable_components(
-        index; log=missing
+        index
     )
 
     @test dims == OrderedDict(
@@ -91,9 +91,9 @@ end
     cfgrib.filter!(index, paramId=130)
 
     @test index["paramId"] == [130]
-
+    #  TODO: Add logging
     dims, data_var, coord_vars = cfgrib.build_variable_components(
-        index; encode_cf=("geography", ), log=missing
+        index; encode_cf=("geography", )
     )
 
     @test dims == OrderedDict(
@@ -113,3 +113,23 @@ end
 
     @test sum(data) > 0
 end
+
+
+# @testset "Dataset"
+#     test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
+
+#     res = cfgrib.dataset.open_file(test_file)
+
+#     @test occursin("Conventions" in res.attributes
+#     @test occursin("institution" in res.attributes
+#     @test occursin("history" in res.attributes
+#     @test res.attributes["GRIB_edition"] == 1
+#     @test tuple(res.dimensions.keys()) == (
+#         "number",
+#         "time",
+#         "isobaricInhPa",
+#         "latitude",
+#         "longitude",
+#     )
+#     @test len(res.variables) == 9
+# end
