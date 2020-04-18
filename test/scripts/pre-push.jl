@@ -17,4 +17,4 @@ println(
     """
 )
 
-include(joinpath(cfgribjl_dir, "./tests/runtests.jl"))
+include(joinpath(cfgribjl_dir, "./test/runtests.jl"))

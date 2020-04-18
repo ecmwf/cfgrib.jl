@@ -3,7 +3,7 @@ using Test
 using cfgrib
 
 
-const dir_tests = abspath(joinpath(dirname(pathof(cfgrib)), "..", "tests"))
+const dir_tests = abspath(joinpath(dirname(pathof(cfgrib)), "..", "test"))
 const dir_testfiles = abspath(joinpath(dir_tests, "sample-data"))
 
 
