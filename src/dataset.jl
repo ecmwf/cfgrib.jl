@@ -58,7 +58,7 @@ Base.convert(::Type{T}, A::OnDiskArray) where T <: Array = A[repeat([Colon()], l
 function Base.getindex(obj::OnDiskArray, key...)
     expanded_keys = expand_key(key, size(obj))
     #  Geograpyh dims (e.g. lat, lon) are on the end and need to be loaded fully
-    #  returned, so only look at the other dimensions
+    #  so only look at the other dimensions
     header_items = expanded_keys[1:end-obj.geo_ndim]
     array_field_shape = (
         (length(l) for l in header_items)..., size(obj)[end-obj.geo_ndim+1:end]...
@@ -93,7 +93,7 @@ end
 #  TODO: Use parametric struct instead of any
 struct Variable
     dimensions::Tuple{Vararg{String}}
-    data::Union{Array, OnDiskArray}
+    data::Union{Number, Array, OnDiskArray}
     attributes::Dict{String, Any}
 end
 
@@ -158,7 +158,7 @@ function encode_cf_first(
     data_var_attrs["units"] = "1"
 
     if "parameter" in encode_cf
-        if haskey(data_var_attrs, "GRIB_paramId")
+        if haskey(data_var_attrs, "GRIB_cfName")
             data_var_attrs["standard_name"] = data_var_attrs["GRIB_cfName"]
         end
 
@@ -307,7 +307,8 @@ function build_variable_components(
 
         if squeeze && length(values) == 1
             data = data[1]
-            typeof(data) == Array ? nothing : data = [data]
+            #  Should single values be in an array as well?
+            # typeof(data) == Array ? nothing : data = [data]
             dimensions = ()
         end
 
