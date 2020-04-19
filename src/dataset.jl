@@ -1,4 +1,6 @@
 using DataStructures
+using Dates
+using JSON
 
 
 struct DatasetBuildError <: Exception
@@ -347,6 +349,36 @@ function build_variable_components(
     return dims, data_var, coord_vars
 end
 
+#  TODO: logging, filter_by_keys
+function build_dataset_attributes(index; encoding)
+    attributes = cfgrib.enforce_unique_attributes(index, cfgrib.GLOBAL_ATTRIBUTES_KEYS)
+    attributes["Conventions"] = "CF-1.7"
+
+    if "GRIB_centreDescription" in keys(attributes)
+        attributes["institution"] = attributes["GRIB_centreDescription"]
+    end
+
+    attributes_namespace = Dict(
+        "cfgrib_version" => cfgrib_jl_version,  # TODO: Package versions are experimental, this should be changed: https://julialang.github.io/Pkg.jl/dev/api/#Pkg.dependencies
+        "cfgrib_open_kwargs" => JSON.json(encoding),
+        "eccodes_version" => "missing",  # TODO: Not sure how to get this
+        "timestamp" => string(Dates.now()),
+    )
+
+    history_in = (
+        "timestamp GRIB to CDM+CF via " *
+        "cfgrib-cfgrib_version/ecCodes-eccodes_version with cfgrib_open_kwargs"
+    )
+
+    println(history_in)
+
+    [history_in=replace(history_in, p) for p in attributes_namespace]
+    #  TODO: Fix quotes, should probably still be double quotes not single
+    history_in = replace(history_in, "\"" => "'")
+    attributes["history"] = history_in
+
+    return attributes
+end
 
 function build_dataset_components(
         index; errors="warn",
