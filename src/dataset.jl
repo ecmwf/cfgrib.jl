@@ -149,7 +149,10 @@ function encode_cf_first(
         time_dims::Tuple{Vararg{String}}=("time", "step")
     )
 
-    coords_map = cfgrib.ENSEMBLE_KEYS
+    #  NOTE: marking value as `const` just means it cannot be reassigned, the
+    #  value can still be mutated/appended to, so be carfeul `append!`ing to
+    #  the constants
+    coords_map = deepcopy(cfgrib.ENSEMBLE_KEYS)
     param_id = get(data_var_attrs, "GRIB_paramId", missing)
     data_var_attrs["long_name"] = "original GRIB paramId: $(param_id)"
     data_var_attrs["units"] = "1"
@@ -255,7 +258,7 @@ end
 #  TODO: Add filter_by_keys
 function build_variable_components(
         index; encode_cf=(),
-        errors="warn", squeeze=true, read_keys=[],
+        errors="warn", squeeze=true, read_keys=String[],
         time_dims=("time", "step")
     )
     data_var_attrs_keys = cfgrib.DATA_ATTRIBUTES_KEYS
@@ -409,7 +412,7 @@ end
 function build_dataset_components(
         index; errors="warn",
         encode_cf=("parameter", "time", "geography", "vertical"),
-        squeeze=true, read_keys=[], time_dims=("time", "step")
+        squeeze=true, read_keys=String[], time_dims=("time", "step")
     )
 
     dimensions = OrderedDict()
