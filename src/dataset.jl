@@ -22,12 +22,16 @@ end
 function DataSet(
         path::String;
         filter_by_keys::Dict=Dict(),
-        read_keys::Array{String,1}=[],
+        read_keys::Array{String,1}=String[],
         kwargs...
     )::DataSet
+
     index_keys = sort([ALL_KEYS..., read_keys...])
     index = FileIndex(path, index_keys)
-    return DataSet(build_dataset_components(index; read_keys=read_keys, kwargs...)...)
+
+    return DataSet(
+        build_dataset_components(index; read_keys=read_keys, kwargs...)...
+    )
 end
 
 #  TODO: build_array
@@ -429,7 +433,7 @@ function build_dataset_components(
         end
 
         merge!(variables, coord_vars)
-        merge!(variables, Dict("short_name" => data_var))
+        merge!(variables, Dict(short_name => data_var))
         merge!(dimensions, dims)
     end
 
