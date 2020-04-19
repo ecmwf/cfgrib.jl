@@ -8,6 +8,28 @@ struct DatasetBuildError <: Exception
 end
 
 
+struct DataSet
+    dimensions::OrderedDict
+    variables::OrderedDict
+    attributes::OrderedDict
+    encoding::Dict
+end
+
+#  TODO: missing arguments:
+#    - grib_errors
+#    - index_path
+#    - filter_by_keys
+function DataSet(
+        path::String;
+        filter_by_keys::Dict=Dict(),
+        read_keys::Array{String,1}=[],
+        kwargs...
+    )::DataSet
+    index_keys = sort([ALL_KEYS..., read_keys...])
+    index = FileIndex(path, index_keys)
+    return DataSet(build_dataset_components(index; read_keys=read_keys, kwargs...)...)
+end
+
 #  TODO: build_array
 struct OnDiskArray
     grib_path::String
@@ -370,8 +392,6 @@ function build_dataset_attributes(index; encoding)
         "cfgrib-cfgrib_version/ecCodes-eccodes_version with cfgrib_open_kwargs"
     )
 
-    println(history_in)
-
     [history_in=replace(history_in, p) for p in attributes_namespace]
     #  TODO: Fix quotes, should probably still be double quotes not single
     history_in = replace(history_in, "\"" => "'")
@@ -380,6 +400,8 @@ function build_dataset_attributes(index; encoding)
     return attributes
 end
 
+
+  # TODO: Add filter_by_keys
 function build_dataset_components(
         index; errors="warn",
         encode_cf=("parameter", "time", "geography", "vertical"),
@@ -391,15 +413,32 @@ function build_dataset_components(
     for param_id in index["paramId"]
         var_index = filter(index, paramId=param_id)
         dims, data_var, coord_vars = build_variable_components(
-            var_index,
-            encode_cf,
+            var_index;
+            encode_cf=encode_cf,
             errors=errors,
             squeeze=squeeze,
             read_keys=read_keys,
             time_dims=time_dims,
         )
 
-        short_name = data_var.attributes.get("GRIB_shortName", "paramId_%d" % param_id)
-        var_name = data_var.attributes.get("GRIB_cfVarName", "unknown")
+        short_name = get(data_var.attributes, "GRIB_shortName", "paramId$(param_id)")
+        var_name = get(data_var.attributes, "GRIB_cfVarName", "unknown")
+
+        if ("parameter" in encode_cf) && !(var_name in ("unknown", "missing")) && !ismissing(var_name)
+            short_name = var_name
+        end
+
+        merge!(variables, coord_vars)
+        merge!(variables, Dict("short_name" => data_var))
+        merge!(dimensions, dims)
     end
+
+    encoding = Dict(
+        "source" => index.grib_path,
+        "filter_by_keys" => "not_implemented",  # TODO: Add filter_by_keys
+        "encode_cf" => encode_cf
+    )
+    attributes = build_dataset_attributes(index, encoding=encoding)
+
+    return dimensions, variables, attributes, encoding
 end
