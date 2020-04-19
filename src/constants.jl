@@ -223,8 +223,8 @@ const COORD_ATTRS = Dict(
     ),
 )
 
-GRID_TYPES_DIMENSION_COORDS = ["regular_ll", "regular_gg"]
-GRID_TYPES_2D_NON_DIMENSION_COORDS = [
+const GRID_TYPES_DIMENSION_COORDS = ["regular_ll", "regular_gg"]
+const GRID_TYPES_2D_NON_DIMENSION_COORDS = [
     "rotated_ll",
     "rotated_gg",
     "lambert",
