@@ -1,3 +1,4 @@
+using Base.Iterators
 using DataStructures
 using Dates
 using JSON
@@ -70,11 +71,18 @@ function Base.getindex(obj::OnDiskArray, key...)
     GribFile(obj.grib_path) do file
         message_length_cumsum = cumsum(obj.message_lengths)
         for (header_indexes, offset) in pairs(obj.offsets)
-            array_field_indexes = [
+            array_field_indexes = collect(flatten([
                 findall(it .== ix)
                 for (it, ix)
                 in zip(header_items, header_indexes)
-            ]
+            ]))
+
+            if length(array_field_indexes) != length(header_indexes)
+                #  If the index (e.g. [10, 4, 1]) is not in the requested header
+                #  range (e.g [1:10, 1:4, 2]) then findall will return fewer
+                #  items than required (e.g 2 instead of 3). Skip these cases
+                continue
+            end
 
             offset_message_index = findfirst(message_length_cumsum .> offset) - 1
             seek(file, offset_message_index)
@@ -84,9 +92,15 @@ function Base.getindex(obj::OnDiskArray, key...)
         end
     end
 
-    #  TODO: Skipped some sections fo the python equivalent code as I don't get
+    #  TODO: Weird 'correction, not sure if this the right approach. In the case
+    #  where the key is like [:, :, *2*, 120, 61] you might have an array field of
+    #  shape (10, 4, 1, 120, 61), which correctly means that only the 2nd layer
+    #  was loaded. However this means that the index *2* should now be 1
+    corrected_key = collect(Any, deepcopy(key))
+    corrected_key[collect(array_field_shape) .== 1] .= 1
+    #  TODO: Skipped some sections of the python equivalent code as I don't get
     #  what they're for. Should check this out later
-    return getindex(array_field, key...)
+    return getindex(array_field, corrected_key...)
 end
 
 
