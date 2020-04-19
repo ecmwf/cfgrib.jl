@@ -1,7 +1,9 @@
 using Dates
 using GRIB
 
+
 DEFAULT_EPOCH = DateTime(1970, 1, 1, 0, 0)
+
 
 function from_grib_date_time(date::Int, time::Int; epoch=DEFAULT_EPOCH)
     hour = time ÷ 100
@@ -24,6 +26,7 @@ function from_grib_date_time(
 
     return from_grib_date_time(date, time)
 end
+
 
 #  TODO: This probably won't work translated directly from python
 #  check cases where time and step are effectively missing
@@ -68,3 +71,10 @@ function build_valid_time(time::Array{Int, 1}, step::Array{Int, 1})
     return dims, data
 
 end
+
+#  TODO: implement other conversion methods, but some seem unused, should these
+#  be implemented as well:
+#   - to_grib_date_time
+#   - from_grib_step
+#   - to_grib_step
+#   - from_grib_month
