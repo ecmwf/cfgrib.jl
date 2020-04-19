@@ -32,6 +32,13 @@ end
     )
 
     @test size(oda) == oda.size
+
+    test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
+    res = cfgrib.DataSet(test_file).variables["t"]
+
+    @test res.data isa cfgrib.OnDiskArray
+
+    @test size(res.data[:, :, 2, 120, 61]) == size(res.data)[1:2]
 end
 
 
