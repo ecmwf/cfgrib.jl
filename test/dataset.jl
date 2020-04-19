@@ -115,21 +115,24 @@ end
 end
 
 
-# @testset "Dataset"
-#     test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
+@testset "DataSet" begin
+    test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
 
-#     res = cfgrib.dataset.open_file(test_file)
+    res = cfgrib.DataSet(test_file)
 
-#     @test occursin("Conventions" in res.attributes
-#     @test occursin("institution" in res.attributes
-#     @test occursin("history" in res.attributes
-#     @test res.attributes["GRIB_edition"] == 1
-#     @test tuple(res.dimensions.keys()) == (
-#         "number",
-#         "time",
-#         "isobaricInhPa",
-#         "latitude",
-#         "longitude",
-#     )
-#     @test len(res.variables) == 9
-# end
+    @test "Conventions" in keys(res.attributes)
+    @test "institution" in keys(res.attributes)
+    @test "history" in keys(res.attributes)
+
+    @test res.attributes["GRIB_edition"] == 1
+
+    @test res.dimensions == OrderedDict(
+        "number"        => 10,
+        "time"          => 4,
+        "isobaricInhPa" => 2,
+        "longitude"     => 120,
+        "latitude"      => 61
+    )
+
+    @test length(res.variables) == 9
+end
