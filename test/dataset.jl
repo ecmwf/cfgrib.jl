@@ -123,8 +123,8 @@ end
 
 
 @testset "DataSet" begin
+@testset "DataSet_default_encode" begin
     test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
-
     res = cfgrib.DataSet(test_file)
 
     @test "Conventions" in keys(res.attributes)
@@ -142,4 +142,109 @@ end
     )
 
     @test length(res.variables) == 9
+end
+
+@testset "DataSet_no_encode" begin
+    test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
+    res = cfgrib.DataSet(test_file; encode_cf=())
+
+    @test "Conventions" in keys(res.attributes)
+    @test "institution" in keys(res.attributes)
+    @test "history" in keys(res.attributes)
+
+    @test res.attributes["GRIB_edition"] == 1
+
+    @test res.dimensions == OrderedDict(
+        "number"   => 10,
+        "dataDate" => 2,
+        "dataTime" => 2,
+        "level"    => 2,
+        "values"   => 7320
+    )
+
+    @test length(res.variables) == 9
+end
+
+@testset "DataSet_cf_time" begin
+    test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
+    res = cfgrib.DataSet(test_file; encode_cf=("time", ))
+
+    @test "Conventions" in keys(res.attributes)
+    @test "institution" in keys(res.attributes)
+    @test "history" in keys(res.attributes)
+
+    @test res.attributes["GRIB_edition"] == 1
+
+    @test res.dimensions == OrderedDict(
+        "number" => 10,
+        "time"   => 4,
+        "level"  => 2,
+        "values" => 7320
+    )
+
+    @test length(res.variables) == 9
+end
+
+@testset "DataSet_cf_geography" begin
+    test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
+    res = cfgrib.DataSet(test_file; encode_cf=("geography", ))
+
+    @test "Conventions" in keys(res.attributes)
+    @test "institution" in keys(res.attributes)
+    @test "history" in keys(res.attributes)
+
+    @test res.attributes["GRIB_edition"] == 1
+
+    @test res.dimensions == OrderedDict(
+        "number"    => 10,
+        "dataDate"  => 2,
+        "dataTime"  => 2,
+        "level"     => 2,
+        "longitude" => 120,
+        "latitude"  => 61
+    )
+
+    @test length(res.variables) == 9
+end
+
+@testset "DataSet_cf_vertical" begin
+    test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
+    res = cfgrib.DataSet(test_file; encode_cf=("vertical", ))
+
+    @test "Conventions" in keys(res.attributes)
+    @test "institution" in keys(res.attributes)
+    @test "history" in keys(res.attributes)
+
+    @test res.attributes["GRIB_edition"] == 1
+
+    @test res.dimensions == OrderedDict(
+        "number"        => 10,
+        "dataDate"      => 2,
+        "dataTime"      => 2,
+        "isobaricInhPa" => 2,
+        "values"        => 7320
+    )
+
+    @test length(res.variables) == 9
+end
+
+@testset "DataSet_gg_surface" begin
+    test_file = joinpath(dir_testfiles, "regular_gg_sfc.grib")
+    res = cfgrib.DataSet(test_file)
+
+    @test "Conventions" in keys(res.attributes)
+    @test "institution" in keys(res.attributes)
+    @test "history" in keys(res.attributes)
+
+    @test res.attributes["GRIB_edition"] == 1
+
+    @test res.dimensions == OrderedDict(
+        "longitude" => 192,
+        "latitude"  => 96
+    )
+
+    @test length(res.variables) == 8
+
+    @test res.variables["latitude"].data[1:2] ≈ [88.57216851, 86.72253095]
+end
 end
