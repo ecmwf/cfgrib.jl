@@ -42,7 +42,11 @@ function FileIndex(grib_path::String, index_keys::Array{String, 1})
     fileindex.grib_path = grib_path
     fileindex.index_keys = index_keys
 
-    index_path!(fileindex)
+    index_keys_hash = hash(
+        join([fileindex.index_keys..., fileindex.allowed_protocol_version])
+    )
+    index_keys_hash = string(index_keys_hash, base=16)
+    fileindex.index_path = ".$(fileindex.grib_path).$index_keys_hash.idx"
 
     if isfile(fileindex.index_path)
         from_indexfile!(fileindex)
