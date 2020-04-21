@@ -22,7 +22,6 @@ end
 #    - filter_by_keys
 function DataSet(
         path::String;
-        filter_by_keys::Dict=Dict(),
         read_keys::Array{String,1}=String[],
         kwargs...
     )::DataSet
@@ -100,6 +99,7 @@ function Base.getindex(obj::OnDiskArray, key...)
     corrected_key[collect(array_field_shape) .== 1] .= 1
     #  TODO: Skipped some sections of the python equivalent code as I don't get
     #  what they're for. Should check this out later
+    #  TODO: Add in missing value substitution
     return getindex(array_field, corrected_key...)
 end
 
@@ -138,7 +138,7 @@ function enforce_unique_attributes(
 
         value = values[1]
 
-        if !ismissing(value) && !(value in ["missing", "undef", "unknown"])
+        if !ismissing(value) && !(value in ["undef", "unknown"])
             attributes["GRIB_" * key] = value
         end
     end
@@ -154,53 +154,6 @@ function enforce_unique_attributes(index::FileIndex, attribute_keys::Array)
     )
 
     return attributes
-end
-
-
-function encode_cf_first(
-        data_var_attrs::OrderedDict,
-        encode_cf::Tuple{Vararg{String}}=("parameter", "time"),
-        time_dims::Tuple{Vararg{String}}=("time", "step")
-    )
-
-    #  NOTE: marking value as `const` just means it cannot be reassigned, the
-    #  value can still be mutated/appended to, so be carfeul `append!`ing to
-    #  the constants
-    coords_map = deepcopy(cfgrib.ENSEMBLE_KEYS)
-    param_id = get(data_var_attrs, "GRIB_paramId", missing)
-    data_var_attrs["long_name"] = "original GRIB paramId: $(param_id)"
-    data_var_attrs["units"] = "1"
-
-    if "parameter" in encode_cf
-        if haskey(data_var_attrs, "GRIB_cfName")
-            data_var_attrs["standard_name"] = data_var_attrs["GRIB_cfName"]
-        end
-
-        if haskey(data_var_attrs, "GRIB_name")
-            data_var_attrs["long_name"] = data_var_attrs["GRIB_name"]
-        end
-
-        if haskey(data_var_attrs, "GRIB_units")
-            data_var_attrs["units"] = data_var_attrs["GRIB_units"]
-        end
-    end
-
-    if "time" in encode_cf
-        if issubset(time_dims, cfgrib.ALL_REF_TIME_KEYS)
-            append!(coords_map, time_dims)
-        else
-            throw("time_dims $(time_dims) is not a subset of " *
-                  "$(cfgrib.ALL_REF_TIME_KEYS)"
-            )
-        end
-    else
-        append!(coords_map, cfgrib.DATA_TIME_KEYS)
-    end
-
-    append!(coords_map, cfgrib.VERTICAL_KEYS)
-    append!(coords_map, cfgrib.SPECTRA_KEYS)
-
-    return coords_map
 end
 
 
@@ -266,6 +219,53 @@ function build_geography_coordinates(
     end
 
     return geo_dims, geo_shape, geo_coord_vars
+end
+
+
+function encode_cf_first(
+        data_var_attrs::OrderedDict,
+        encode_cf::Tuple{Vararg{String}}=("parameter", "time"),
+        time_dims::Tuple{Vararg{String}}=("time", "step")
+    )
+
+    #  NOTE: marking value as `const` just means it cannot be reassigned, the
+    #  value can still be mutated/appended to, so be carfeul `append!`ing to
+    #  the constants
+    coords_map = deepcopy(cfgrib.ENSEMBLE_KEYS)
+    param_id = get(data_var_attrs, "GRIB_paramId", missing)
+    data_var_attrs["long_name"] = "original GRIB paramId: $(param_id)"
+    data_var_attrs["units"] = "1"
+
+    if "parameter" in encode_cf
+        if haskey(data_var_attrs, "GRIB_cfName")
+            data_var_attrs["standard_name"] = data_var_attrs["GRIB_cfName"]
+        end
+
+        if haskey(data_var_attrs, "GRIB_name")
+            data_var_attrs["long_name"] = data_var_attrs["GRIB_name"]
+        end
+
+        if haskey(data_var_attrs, "GRIB_units")
+            data_var_attrs["units"] = data_var_attrs["GRIB_units"]
+        end
+    end
+
+    if "time" in encode_cf
+        if issubset(time_dims, cfgrib.ALL_REF_TIME_KEYS)
+            append!(coords_map, time_dims)
+        else
+            throw("time_dims $(time_dims) is not a subset of " *
+                  "$(cfgrib.ALL_REF_TIME_KEYS)"
+            )
+        end
+    else
+        append!(coords_map, cfgrib.DATA_TIME_KEYS)
+    end
+
+    append!(coords_map, cfgrib.VERTICAL_KEYS)
+    append!(coords_map, cfgrib.SPECTRA_KEYS)
+
+    return coords_map
 end
 
 
@@ -393,9 +393,10 @@ function build_variable_components(
     return dims, data_var, coord_vars
 end
 
+
 #  TODO: logging, filter_by_keys
 function build_dataset_attributes(index; encoding)
-    attributes = cfgrib.enforce_unique_attributes(index, cfgrib.GLOBAL_ATTRIBUTES_KEYS)
+    attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS)
     attributes["Conventions"] = "CF-1.7"
 
     if "GRIB_centreDescription" in keys(attributes)
@@ -446,7 +447,7 @@ function build_dataset_components(
         short_name = get(data_var.attributes, "GRIB_shortName", "paramId$(param_id)")
         var_name = get(data_var.attributes, "GRIB_cfVarName", "unknown")
 
-        if ("parameter" in encode_cf) && !(var_name in ("unknown", "missing")) && !ismissing(var_name)
+        if ("parameter" in encode_cf) && !(var_name == "unknown") && !ismissing(var_name)
             short_name = var_name
         end
 
