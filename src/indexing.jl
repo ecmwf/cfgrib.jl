@@ -42,13 +42,7 @@ function FileIndex(grib_path::String, index_keys::Array{String, 1})
     fileindex.grib_path = grib_path
     fileindex.index_keys = index_keys
 
-    index_keys_hash = hash(
-        join([fileindex.index_keys..., fileindex.allowed_protocol_version])
-    )
-    index_keys_hash = string(index_keys_hash, base=16)
-    fileindex.index_path = ".$(fileindex.grib_path).$index_keys_hash.idx"
-
-    if isfile(fileindex.index_path)
+    if isfile(index_path(fileindex))
         from_indexfile!(fileindex)
     else
         from_gribfile!(fileindex)
@@ -58,57 +52,19 @@ function FileIndex(grib_path::String, index_keys::Array{String, 1})
     return fileindex
 end
 
-function Base.getindex(obj::FileIndex, key)
-    return obj.header_values[key]
-end
+Base.getindex(obj::FileIndex, key) = obj.header_values[key]
 
 
-function filter_offsets(index::FileIndex; query...)
-    filtered_offsets = Array{Pair{Any,Any},1}()
-
-    for (header_values, offset_values) in index.offsets
-        for (k, v) in query
-            if header_values[k] != v
-                break
-            else
-                append!(filtered_offsets, [Pair(header_values, offset_values)])
-                break
-            end
-        end
-    end
-
-    return filtered_offsets
-end
-
-function filter(index::FileIndex; query...)
-    filtered_offsets = filter_offsets(index; query...)
-
-    filtered_index = deepcopy(index)
-    filtered_index.offsets = filtered_offsets
-    filtered_index.filter_by_keys = query
-
-    get_header_values!(filtered_index)
-
-    return filtered_index
-end
-
-function filter!(index::FileIndex; query...)
-    filtered_offsets = filter_offsets(index; query...)
-
-    index.offsets = filtered_offsets
-    index.filter_by_keys = query
-
-    get_header_values!(index)
-end
-
-
-function index_path!(index::FileIndex)
+function index_path(index::FileIndex)
     index_keys_hash = hash(
         join([index.index_keys..., index.allowed_protocol_version])
     )
     index_keys_hash = string(index_keys_hash, base=16)
-    index.index_path = ".$(index.grib_path).$index_keys_hash.idx"
+
+    return ".$(index.grib_path).$index_keys_hash.idx"
 end
+
+index_path!(index::FileIndex) = setfield!(index, :index_path, index_path(index))
 
 
 function save_indexfile(index::FileIndex)
@@ -206,4 +162,43 @@ function first(index::FileIndex)
         seek(file, offset_message_index)
         return Message(file)
     end
+end
+
+
+function filter_offsets(index::FileIndex; query...)
+    filtered_offsets = Array{Pair{Any,Any},1}()
+
+    for (header_values, offset_values) in index.offsets
+        for (k, v) in query
+            if header_values[k] != v
+                break
+            else
+                append!(filtered_offsets, [Pair(header_values, offset_values)])
+                break
+            end
+        end
+    end
+
+    return filtered_offsets
+end
+
+function filter(index::FileIndex; query...)
+    filtered_offsets = filter_offsets(index; query...)
+
+    filtered_index = deepcopy(index)
+    filtered_index.offsets = filtered_offsets
+    filtered_index.filter_by_keys = query
+
+    get_header_values!(filtered_index)
+
+    return filtered_index
+end
+
+function filter!(index::FileIndex; query...)
+    filtered_offsets = filter_offsets(index; query...)
+
+    index.offsets = filtered_offsets
+    index.filter_by_keys = query
+
+    get_header_values!(index)
 end
