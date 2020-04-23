@@ -12,7 +12,7 @@ Julia can be installed from
 ### Installing cfgrib.jl
 
 Packages in Julia are usually installed by entering package mode (press `]` in
-the julia prompt on a newline) and simply running `] install
+the julia prompt on a newline) and simply running `] add
 https://github.com/RobertRosca/cfgrib.jl`, however as the aim is to dive a bit
 into the code it will be easier to install `cfgrib.jl` as a project instead.
 
@@ -30,7 +30,7 @@ julia > ]
 This would typically work, however there will likely be an error saying that
 the `GRIB.jl` package cannot be found. This is because it has not been added to
 the Julia package registry yet, you must first manually install it by running
-`install https://github.com/weech/GRIB.jl` while in package mode. Once it has
+`add https://github.com/weech/GRIB.jl` while in package mode. Once it has
 finished, run instantiate again and `cfgrib.jl` will be installed.
 
 ### Installing a Julia Kernel
@@ -42,7 +42,7 @@ install process is running:
 ```
 > julia
 julia > ]
-(@v1.4) pkg> install IJulia
+(@v1.4) pkg> add IJulia
 (@v1.4) pkg> (backspace to exit pkg mode)
 julia > using IJulia
 ```
