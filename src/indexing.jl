@@ -61,7 +61,7 @@ function index_path(index::FileIndex)
     )
     index_keys_hash = string(index_keys_hash, base=16)
 
-    return ".$(index.grib_path).$index_keys_hash.idx"
+    return "$(index.grib_path).$index_keys_hash.idx"
 end
 
 index_path!(index::FileIndex) = setfield!(index, :index_path, index_path(index))
