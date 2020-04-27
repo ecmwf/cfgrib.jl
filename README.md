@@ -36,7 +36,6 @@ dims, data_var, coord_vars = cfgrib.build_variable_components(
 )
 ```
 
-
 https://discourse.julialang.org/t/new-package-to-map-grib-files-to-the-unidatas-common-data-model-v4-following-the-cf-conventions/32375/9
 
 https://github.com/rafaqz/DimensionalData.jl
