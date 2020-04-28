@@ -1,7 +1,7 @@
 # cfgrib
 
-[![Build Status](https://travis-ci.com/robertrosca/cfgrib.jl.svg?branch=master)](https://travis-ci.com/robertrosca/cfgrib.jl)
-[![Codecov](https://codecov.io/gh/robertrosca/cfgrib.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/robertrosca/cfgrib.jl)
+[![Build Status](https://travis-ci.com/robertrosca/cfgrib.jl.svg?branch=dev)](https://travis-ci.com/robertrosca/cfgrib.jl)
+[![Codecov](https://codecov.io/gh/robertrosca/cfgrib.jl/branch/dev/graph/badge.svg)](https://codecov.io/gh/robertrosca/cfgrib.jl)
 
 ## Dev Notes
 
