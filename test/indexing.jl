@@ -60,7 +60,7 @@ dfi = dummy_file_index()
 
 #  Will fail on version change
 cfgrib.index_path!(dfi)
-@test dfi.index_path == "../dummy-path.grib.60099cfb35e25e30.idx"
+@test dfi.index_path == "./dummy-path.grib.60099cfb35e25e30.idx"
 
 cfgrib.get_header_values!(dfi)
 expected_header_values = OrderedDict(
@@ -86,5 +86,5 @@ expected_header_values = OrderedDict(
 end
 
 #  Not implemented yet
-@test_skip cfgrib.save_indexfile!(dfi)
-@test_skip cfgrib.from_indexfile!(dfi)
+@test_broken cfgrib.save_indexfile!(dfi)
+@test_broken cfgrib.from_indexfile!(dfi)
