@@ -100,10 +100,11 @@ using cfgrib
         )
         @test typeof(res.variables["z"].data) == cfgrib.OnDiskArray
         @test size(res.variables["z"].data) == (10, 4, 2, 120, 61)
-        @test_skip res.variables["z"].missing_value == 9999
+        @test_broken res.variables["z"].missing_value == 9999
         #  Currently these are not `OrderedDict`, and in the wrong order
         #  TODO: Make these into 'OrderedDict', and order correctly
-        @test_skip res.variables["z"].attributes == OrderedDict(
+        @test_broken typeof(res.variables["z"].attributes) == OrderedDict
+        @test res.variables["z"].attributes == OrderedDict(
             "GRIB_paramId"                            => 129,
             "GRIB_shortName"                          => "z",
             "GRIB_units"                              => "m**2 s**-2",
@@ -174,9 +175,10 @@ using cfgrib
         )
         @test typeof(res.variables["t"].data) == cfgrib.OnDiskArray
         @test size(res.variables["t"].data) == (10, 4, 2, 120, 61)
-        @test_skip res.variables["t"].missing_value == 9999
+        @test_broken res.variables["t"].missing_value == 9999
         #  TODO: Make these into 'OrderedDict', and order correctly
-        @test_skip res.variables["t"].attributes == OrderedDict(
+        @test_broken typeof(res.variables["t"].attributes) == OrderedDict
+        @test res.variables["t"].attributes == OrderedDict(
             "GRIB_paramId"                            => 130,
             "GRIB_shortName"                          => "t",
             "GRIB_units"                              => "K",
