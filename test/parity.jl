@@ -1,8 +1,10 @@
 using DataStructures
 using Test
+import Pkg
 
 using cfgrib
 using Conda; ENV["PYTHON"] = Conda.PYTHONDIR
+Pkg.build("PyCall")
 using PyCall
 
 Conda.add_channel("conda-forge")
