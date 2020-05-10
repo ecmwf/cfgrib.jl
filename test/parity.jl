@@ -3,12 +3,15 @@ using Test
 import Pkg
 
 using cfgrib
-using Conda; ENV["PYTHON"] = Conda.PYTHONDIR
-Pkg.build("PyCall")
-using PyCall
 
-Conda.add_channel("conda-forge")
-Conda.add("cfgrib")
+#  Setup for pycall tests - done by travis, uncomment for manual run
+# using Conda; ENV["PYTHON"] = Conda.PYTHONDIR
+# Pkg.build("PyCall")
+
+# Conda.add_channel("conda-forge")
+# Conda.add("cfgrib")
+
+using PyCall
 
 
 @testset "era5-levels-members DataSet parity" begin
