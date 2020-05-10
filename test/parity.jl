@@ -2,6 +2,11 @@ using DataStructures
 using Test
 
 using cfgrib
+using Conda; ENV["PYTHON"] = Conda.PYTHONDIR
+using PyCall
+
+Conda.add_channel("conda-forge")
+Conda.add("cfgrib")
 
 
 @testset "era5-levels-members DataSet parity" begin
@@ -242,5 +247,72 @@ using cfgrib
             258.56158 258.40143 258.27643 258.1983
             258.5401  258.5401  258.5401  258.5401
         ]
+    end
+end
+
+
+cfgrib_dataset_py = pyimport("cfgrib.dataset")
+
+test_files = [
+    # "era5-levels-corrupted.grib",# - skip corrupted file tests
+    "era5-levels-members.grib",
+    "fields_with_missing_values.grib",
+    # "hpa_and_pa.grib",# - DatasetBuildError("multiple values for unique key, try re-open the file with one of
+    # "lambert_grid.grib",# - TODO: build_geography_coordinates unimplemented for this
+    "multi_param_on_multi_dims.grib",
+    # "reduced_gg.grib", - TODO: investigate segfault in GRIB.jl
+    "regular_gg_ml.grib",
+    "regular_gg_ml_g2.grib",
+    "regular_gg_pl.grib",
+    "regular_gg_sfc.grib",
+    "regular_gg_wrong_increment.grib",
+    "regular_ll_msl.grib",
+    "regular_ll_sfc.grib",
+    "regular_ll_wrong_increment.grib",
+    "scanning_mode_64.grib",
+    # "spherical_harmonics.grib", - ecCodes provides no latitudes/longitudes for gridType='sh'
+    "t_analysis_and_fc_0.grib",
+    # "t_on_different_level_types.grib", - DatasetBuildError("multiple values for unique key, try re-open the file with one of
+    # "tp_on_different_grid_resolutions.grib", - DatasetBuildError("multiple values for unique key, try re-open the file with one of
+    # "uv_on_different_levels.grib" - cfgrib.dataset.DatasetBuildError: key present and new value is different
+]
+
+attributes_key_blacklist = [
+    "history"
+]
+
+python_type_mapping = Dict(
+    "<class 'cfgrib.dataset.Variable'>" => cfgrib.Variable,
+    "<class 'cfgrib.dataset.OnDiskArray'>" => cfgrib.OnDiskArray
+)
+
+@testset "pycall tests for $test_file" for test_file in test_files
+    # Leave print here in case of segfault/hard crash
+    println("\t\t pycall tests for", test_file)
+    test_file_path = joinpath(dir_testfiles, test_file)
+    res_py = cfgrib_dataset_py.open_file(test_file_path)
+    res = cfgrib.DataSet(test_file_path)
+
+    res_py_attributes = copy(res_py.attributes)
+    [delete!(res_py_attributes, key) for key in attributes_key_blacklist]
+    [delete!(res.attributes, key) for key in attributes_key_blacklist]
+    @test res.attributes == res_py_attributes
+
+    @test res.dimensions == res_py.dimensions
+
+    @test Set(keys(res_py.variables)) == Set(keys(res.variables))
+
+    @testset "variable $var" for var in keys(res.variables)
+        var_jl = res.variables[var]
+        var_py = res_py.variables[var]
+        @test Set(var_jl.dimensions) == Set(var_py.dimensions)
+
+        var_type_py = pystr(py"type($(res_py.variables[var]))")
+
+        # TODO: Add in tests for variables
+        # if var_type_py in keys(python_type_mapping)
+        #     @test
+        # else
+        # end
     end
 end
