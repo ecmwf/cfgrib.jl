@@ -64,18 +64,22 @@ function Base.getindex(obj::OnDiskArray, key...)
     array_field_shape = (
         (length(l) for l in header_items)..., size(obj)[end-obj.geo_ndim+1:end]...
     )
-    array_field = Array{obj.dtype}(undef, array_field_shape...)
+    array_field = Array{Union{Missing,obj.dtype}}(undef, array_field_shape...)
 
     geo_ndim_idx = repeat([Colon()], obj.geo_ndim)
 
     GribFile(obj.grib_path) do file
         message_length_cumsum = cumsum(obj.message_lengths)
         for (header_indexes, offset) in pairs(obj.offsets)
-            array_field_indexes = collect(flatten([
-                findall(it .== ix)
-                for (it, ix)
-                in zip(header_items, header_indexes)
-            ]))
+            if length(header_indexes) == 0
+                array_field_indexes = ()
+            else
+                array_field_indexes = collect(flatten([
+                    findall(it .== ix)
+                    for (it, ix)
+                    in zip(header_items, header_indexes)
+                ]))
+            end
 
             if length(array_field_indexes) != length(header_indexes)
                 #  If the index (e.g. [10, 4, 1]) is not in the requested header
@@ -100,7 +104,7 @@ function Base.getindex(obj::OnDiskArray, key...)
     corrected_key[collect(array_field_shape) .== 1] .= 1
     #  TODO: Skipped some sections of the python equivalent code as I don't get
     #  what they're for. Should check this out later
-    #  TODO: Add in missing value substitution
+    replace!(array_field, obj.missing_value=>missing)
     return getindex(array_field, corrected_key...)
 end
 
@@ -330,7 +334,7 @@ function build_variable_components(
         end
 
         attributes = Dict(
-            "long_name" => "original GRIB coordinate for key:" *
+            "long_name" => "original GRIB coordinate for key: " *
                            "$(coord_key)($(coord_name))",
             "units"     => "1",
         )
@@ -386,14 +390,15 @@ function build_variable_components(
         offsets[Tuple(header_indexes)] = offset
     end
 
+    missing_value = get(data_var_attrs, "missingValue", 9999)
     data = OnDiskArray(
         index.grib_path,
         shape,
         offsets,
-        index.message_lengths,  #  TODO: Fix seek offset issue
-        missing,
+        index.message_lengths, #  TODO: Fix seek offset issue
+        missing_value,
         length(geo_dims),
-        Float32
+        Float32 #  TODO: Should be the actual type of the data...
     )
 
     if haskey(coord_vars, "time") && haskey(coord_vars, "step")
