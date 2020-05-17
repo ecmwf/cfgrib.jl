@@ -292,8 +292,6 @@ python_type_mapping = Dict(
 )
 
 @testset "pycall tests for $test_file" for test_file in test_files
-    # Leave print here in case of segfault/hard crash
-    println("\t\t pycall tests for", test_file)
     test_file_path = joinpath(dir_testfiles, test_file)
     res_py = cfgrib_dataset_py.open_file(test_file_path)
     res = cfgrib.DataSet(test_file_path)
@@ -310,14 +308,52 @@ python_type_mapping = Dict(
     @testset "variable $var" for var in keys(res.variables)
         var_jl = res.variables[var]
         var_py = res_py.variables[var]
-        @test Set(var_jl.dimensions) == Set(var_py.dimensions)
 
-        var_type_py = pystr(py"type($(res_py.variables[var]))")
+        #  TODO: Refactor this horrific code...
+        var_data_type_py = typeof(res_py.variables[var].data)
+        var_data_type_py_native = pystr(py"type($(res_py.variables[var].data))")
+        if var_data_type_py != PyObject
+            if var_data_type_py <: Number
+                @test var_jl.data ≈ var_py.data
+            elseif var_data_type_py <: Array{T,1} where T <: Number
+                # One-dimensional arrays should be identical
+                @test var_jl.data ≈ var_py.data
+            else
+                @warn "var $var of type $var_data_type_py not tested"
+            end
+        elseif var_data_type_py == PyObject
+            var_data_type_py_translated = python_type_mapping[var_data_type_py_native]
+            if var_data_type_py_translated == cfgrib.OnDiskArray
+                @test var_jl.data.geo_ndim == var_py.data.geo_ndim
 
-        # TODO: Add in tests for variables
-        # if var_type_py in keys(python_type_mapping)
-        #     @test
-        # else
-        # end
+                transpose_flag = !(var_jl.dimensions[end-var_jl.data.geo_ndim+1:end] == var_py.dimensions[end-var_jl.data.geo_ndim+1:end])
+
+                multidim_idx = tuple(
+                    ones(Int, length(size(var_jl.data)) - var_jl.data.geo_ndim)...,
+                    repeat([Colon()], var_jl.data.geo_ndim)...
+                )
+                if transpose_flag
+                    var_jl_dims = (
+                        var_jl.dimensions[1:end-var_jl.data.geo_ndim]...,
+                        var_jl.dimensions[end-var_jl.data.geo_ndim+1:end][end:-1:1]...
+                    )
+                    var_jl_data = adjoint(var_jl.data[multidim_idx...])
+                elseif var_jl.data.geo_dims[end:-1:1] == var_py.data.geo_dims
+                    var_jl_dims = var_jl.dimensions
+                    var_jl_data = var_jl.data[multidim_idx...]
+                end
+
+                var_py_data = var_py.data.build_array()[multidim_idx...]
+                var_py_data = replace(var_py_data, NaN=>missing)
+
+                @test var_jl_dims == var_py.dimensions
+                @test ismissing.(var_jl_data) ≈ ismissing.(var_py_data)
+                @test collect(skipmissing(var_jl_data)) ≈ collect(skipmissing(var_py_data))
+            else
+                @warn "var $var of type $var_data_type_py not tested"
+            end
+        end
+
+        @test var_jl.attributes == var_py.attributes
     end
 end
