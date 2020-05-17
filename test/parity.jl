@@ -263,7 +263,7 @@ test_files = [
     "era5-levels-members.grib",
     "fields_with_missing_values.grib",
     # "hpa_and_pa.grib",# - DatasetBuildError("multiple values for unique key, try re-open the file with one of
-    # "lambert_grid.grib",# - TODO: build_geography_coordinates unimplemented for this
+    "lambert_grid.grib",
     "multi_param_on_multi_dims.grib",
     # "reduced_gg.grib", - TODO: investigate segfault in GRIB.jl
     "regular_gg_ml.grib",
