@@ -1,11 +1,11 @@
 using DataStructures
 using Test
-import Pkg
 
 using cfgrib
 
 #  Setup for pycall tests - done by travis, uncomment for manual run
 # using Conda; ENV["PYTHON"] = Conda.PYTHONDIR
+# using Pkg
 # Pkg.build("PyCall")
 
 # Conda.add_channel("conda-forge")
