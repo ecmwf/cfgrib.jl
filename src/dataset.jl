@@ -106,7 +106,7 @@ end
 
 
 #  TODO: Use parametric struct instead of any
-struct Variable
+Base.@kwdef struct Variable
     dimensions::Tuple{Vararg{String}}
     data::Union{Number, Array, OnDiskArray}
     attributes::Dict{String, Any}
@@ -167,7 +167,6 @@ function build_geography_coordinates(
     grid_type = cfgrib.getone(index, "gridType")
 
     if "geography" in encode_cf && grid_type in GRID_TYPES_DIMENSION_COORDS
-
         column_major = getone(index, "jPointsAreConsecutive") != 0
         #  TODO: column/row major has always confused me, not sure if this
         #  is the correct approach here. Idea is taken from how GRIB.jl
@@ -182,7 +181,9 @@ function build_geography_coordinates(
         end
         latitudes = first_message["distinctLatitudes"]
         geo_coord_vars["latitude"] = Variable(
-            ("latitude",), latitudes, cfgrib.COORD_ATTRS["latitude"]
+            dimensions = ("latitude",),
+            data = latitudes,
+            attributes = cfgrib.COORD_ATTRS["latitude"]
         )
 
         if latitudes[1] > latitudes[end]
@@ -191,28 +192,50 @@ function build_geography_coordinates(
         end
 
         geo_coord_vars["longitude"] = Variable(
-            ("longitude",),
-            first_message["distinctLongitudes"],
-            cfgrib.COORD_ATTRS["longitude"],
+            dimensions = ("longitude",),
+            data = first_message["distinctLongitudes"],
+            attributes = cfgrib.COORD_ATTRS["longitude"],
         )
     elseif "geography" in encode_cf && grid_type in GRID_TYPES_2D_NON_DIMENSION_COORDS
-        throw("unimplemented")
+        #  TODO: Check if this works as expected given column/row majox differences
+        column_major = getone(index, "jPointsAreConsecutive") != 0
+        if column_major
+            geo_dims = ("y", "x")
+            geo_shape = (getone(index, "Ny"), getone(index, "Nx"))
+        else
+            geo_dims = ("x", "y")
+            geo_shape = (getone(index, "Nx"), getone(index, "Ny"))
+        end
+        try
+            geo_coord_vars["latitude"] = Variable(
+                dimensions = geo_dims,
+                data = reshape(first_message["latitudes"], geo_shape),
+                attributes = COORD_ATTRS["latitude"],
+            )
+            geo_coord_vars["longitude"] = Variable(
+                dimensions = geo_dims,
+                data = reshape(first_message["longitudes"], geo_shape),
+                attributes = COORD_ATTRS["longitude"],
+            )
+        catch e
+            rethrow(e)
+        end
     else
         geo_dims = ("values", )
         geo_shape = (getone(index, "numberOfPoints"), )
         try
             latitude = first_message["latitudes"]
             geo_coord_vars["latitude"] = Variable(
-                ("values", ),
-                latitude,
-                COORD_ATTRS["latitude"]
+                dimensions = ("values", ),
+                data = latitude,
+                attributes = COORD_ATTRS["latitude"]
             )
 
             longitude = first_message["longitudes"]
             geo_coord_vars["longitude"] = Variable(
-                ("values", ),
-                longitude,
-                COORD_ATTRS["longitude"]
+                dimensions = ("values", ),
+                data = longitude,
+                attributes = COORD_ATTRS["longitude"]
             )
         catch e
             rethrow(e)
