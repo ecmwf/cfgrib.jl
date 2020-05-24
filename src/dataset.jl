@@ -35,7 +35,6 @@ function DataSet(
 end
 
 
-#  TODO: build_array
 struct OnDiskArray
     grib_path::String
     size::Tuple
@@ -53,8 +52,10 @@ Base.size(A::OnDiskArray) = A.size
 Base.axes(A::OnDiskArray) = Tuple(Base.OneTo(i) for i in size(A))
 Base.axes(A::OnDiskArray, d::Int) = axes(A)[d]
 
-#  TODO: This does not convert to specific arrays, e.g. Array{Float32, ndim}
-Base.convert(::Type{T}, A::OnDiskArray) where T <: Array = A[repeat([Colon()], length(size(A)))...]
+function Base.convert(::Type{T}, A::OnDiskArray) where T <: Array
+    res = A[repeat([Colon()], length(size(A)))...]
+    return T(res)
+end
 
 #  TODO: Use propper `to_indices`, add boundscheck
 function Base.getindex(obj::OnDiskArray, key...)
@@ -202,7 +203,6 @@ function build_geography_coordinates(
             attributes = cfgrib.COORD_ATTRS["longitude"],
         )
     elseif "geography" in encode_cf && grid_type in GRID_TYPES_2D_NON_DIMENSION_COORDS
-        #  TODO: Check if this works as expected given column/row majox differences
         column_major = getone(index, "jPointsAreConsecutive") != 0
         if column_major
             geo_dims = ("y", "x")
