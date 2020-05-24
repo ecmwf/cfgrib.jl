@@ -53,6 +53,7 @@ Base.size(A::OnDiskArray) = A.size
 Base.axes(A::OnDiskArray) = Tuple(Base.OneTo(i) for i in size(A))
 Base.axes(A::OnDiskArray, d::Int) = axes(A)[d]
 
+#  TODO: This does not convert to specific arrays, e.g. Array{Float32, ndim}
 Base.convert(::Type{T}, A::OnDiskArray) where T <: Array = A[repeat([Colon()], length(size(A)))...]
 
 #  TODO: Use propper `to_indices`, add boundscheck
