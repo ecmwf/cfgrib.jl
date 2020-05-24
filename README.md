@@ -5,36 +5,25 @@
 
 ## Dev Notes
 
-Missing values (e.g. 9999) are probably not handled correctly
+Question about cfgrib.py:
+
+For the sample file `regular_gg_wrong_increment.grib` the message contains a
+list of 18 432 values, but the given shape of the data is (64, 192), so there
+are 6144 more values than the data shape suggests.
+
+In the python version, the OnDiskArray is read with:
+
+```
+array_field.__getitem__(tuple(array_field_indexes)).flat[:] = values
+```
+
+Which means that the last values are discarded. Is this expected behaviour?
+
 
 Investigate discrepancy between python and julia index
 
 In julia time is [0, 1200], whereas in python it is multiple
 large integers...
-
-
-```
-push!(LOAD_PATH, "/home/roscar/work/cfgrib-project/cfgrib.jl")
-using cfgrib
-
-dir_tests = abspath(joinpath(dirname(pathof(cfgrib)), "..", "test"))
-dir_testfiles = abspath(joinpath(dir_tests, "sample-data"))
-test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
-test_file = joinpath(dir_testfiles, "regular_gg_sfc.grib")
-
-res = cfgrib.DataSet(test_file)
-
-index = cfgrib.FileIndex(
-    test_file,
-    cfgrib.ALL_KEYS
-)
-
-cfgrib.filter!(index, paramId=130)
-
-dims, data_var, coord_vars = cfgrib.build_variable_components(
-    index; encode_cf=("geography", )
-)
-```
 
 https://discourse.julialang.org/t/new-package-to-map-grib-files-to-the-unidatas-common-data-model-v4-following-the-cf-conventions/32375/9
 

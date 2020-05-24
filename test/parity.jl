@@ -270,7 +270,7 @@ test_files = [
     "regular_gg_ml_g2.grib",
     "regular_gg_pl.grib",
     "regular_gg_sfc.grib",
-    "regular_gg_wrong_increment.grib",
+    # "regular_gg_wrong_increment.grib", # Not clear how to handle data that does not fit into given array size
     "regular_ll_msl.grib",
     "regular_ll_sfc.grib",
     "regular_ll_wrong_increment.grib",
@@ -294,39 +294,53 @@ python_type_mapping = Dict(
 @testset "pycall tests for $test_file" for test_file in test_files
     test_file_path = joinpath(dir_testfiles, test_file)
     res_py = cfgrib_dataset_py.open_file(test_file_path)
-    res = cfgrib.DataSet(test_file_path)
+    res_jl = cfgrib.DataSet(test_file_path)
 
     res_py_attributes = copy(res_py.attributes)
     [delete!(res_py_attributes, key) for key in attributes_key_blacklist]
-    [delete!(res.attributes, key) for key in attributes_key_blacklist]
-    @test res.attributes == res_py_attributes
+    [delete!(res_jl.attributes, key) for key in attributes_key_blacklist]
+    @test res_jl.attributes == res_py_attributes
 
-    @test res.dimensions == res_py.dimensions
+    @test res_jl.dimensions == res_py.dimensions
 
-    @test Set(keys(res_py.variables)) == Set(keys(res.variables))
+    @test Set(keys(res_py.variables)) == Set(keys(res_jl.variables))
 
-    @testset "variable $var" for var in keys(res.variables)
-        var_jl = res.variables[var]
+    @testset "variable $var" for var in keys(res_jl.variables)
+        var_jl = res_jl.variables[var]
         var_py = res_py.variables[var]
 
-        #  TODO: Refactor this horrific code...
-        var_data_type_py = typeof(res_py.variables[var].data)
-        var_data_type_py_native = pystr(py"type($(res_py.variables[var].data))")
-        if var_data_type_py != PyObject
-            if var_data_type_py <: Number
+        var_d_type_py = typeof(var_py.data)
+        var_d_type_py_native = pystr(py"type($(var_py.data))")
+
+        #  If the returned value is not a PyObject, it has been automatically
+        #  converted to a native julia type, e.g. numpyarray/list -> Julia Array
+        if var_d_type_py != PyObject
+            if var_d_type_py <: Number
                 @test var_jl.data ≈ var_py.data
-            elseif var_data_type_py <: Array{T,1} where T <: Number
+            elseif var_d_type_py <: Array{T,1} where T <: Number
                 # One-dimensional arrays should be identical
                 @test var_jl.data ≈ var_py.data
+            elseif var_d_type_py <: Array
+                if var_jl.data ≈ var_py.data
+                    @test true
+                elseif adjoint(var_jl.data) ≈ var_py.data
+                    @test true
+                else
+                    #  Values not equal for adjoint or direct comparison
+                    @test false
+                end
             else
-                @warn "var $var of type $var_data_type_py not tested"
+                @warn "Julia Native var $var of type $var_d_type_py not tested"
             end
-        elseif var_data_type_py == PyObject
-            var_data_type_py_translated = python_type_mapping[var_data_type_py_native]
-            if var_data_type_py_translated == cfgrib.OnDiskArray
+        #  If it is still a PyObject, it's most likely a cfgrib 'OnDiskArray'
+        elseif var_d_type_py == PyObject
+            var_d_type_py_jl = python_type_mapping[var_d_type_py_native]
+            if var_d_type_py_jl == cfgrib.OnDiskArray
                 @test var_jl.data.geo_ndim == var_py.data.geo_ndim
 
-                transpose_flag = !(var_jl.dimensions[end-var_jl.data.geo_ndim+1:end] == var_py.dimensions[end-var_jl.data.geo_ndim+1:end])
+                jl_geo_dims = var_jl.dimensions[end-var_jl.data.geo_ndim+1:end]
+                py_geo_dims = var_py.dimensions[end-var_jl.data.geo_ndim+1:end]
+                transpose_flag = !(jl_geo_dims == py_geo_dims)
 
                 multidim_idx = tuple(
                     ones(Int, length(size(var_jl.data)) - var_jl.data.geo_ndim)...,
@@ -350,8 +364,10 @@ python_type_mapping = Dict(
                 @test ismissing.(var_jl_data) ≈ ismissing.(var_py_data)
                 @test collect(skipmissing(var_jl_data)) ≈ collect(skipmissing(var_py_data))
             else
-                @warn "var $var of type $var_data_type_py not tested"
+                @warn "PyObject var $var of type $var_d_type_py not tested"
             end
+        else
+            @warn "var $var of type $var_d_type_py not tested"
         end
 
         @test var_jl.attributes == var_py.attributes
