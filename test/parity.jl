@@ -318,9 +318,12 @@ python_type_mapping = Dict(
             if var_d_type_py <: Number
                 @test var_jl.data ≈ var_py.data
             elseif var_d_type_py <: Array{T,1} where T <: Number
-                # One-dimensional arrays should be identical
+                #  One-dimensional arrays should be identical
                 @test var_jl.data ≈ var_py.data
             elseif var_d_type_py <: Array
+                #  Too much effort to try and figure out which dimension(s) have
+                #  been transposed due to the row/col differences between julia
+                #  and python, easier to just test if either case works
                 if var_jl.data ≈ var_py.data
                     @test true
                 elseif adjoint(var_jl.data) ≈ var_py.data
