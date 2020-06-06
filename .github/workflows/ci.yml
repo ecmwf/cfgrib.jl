@@ -4,31 +4,26 @@ on:
   - pull_request
 jobs:
   test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
+    name: Julia ${{ matrix.version }} - ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.allow_failures }}
+    continue-on-error: ${{ matrix.continue-on-error }}
     strategy:
-      fail-fast: false
       matrix:
-        allow_failures: [false]
         version:
           - '1.4'
           - 'nightly'
         os:
           - ubuntu-latest
           - macOS-latest
-        arch:
-          - x64
         include:
           - version: 'nightly'
-            allow_failures: true
+            continue-on-error: true
     steps:
       - uses: actions/checkout@v2
       - run: rm -rf /github/home/julia
       - uses: julia-actions/setup-julia@v1
         with:
           version: ${{ matrix.version }}
-          arch: ${{ matrix.arch }}
       - uses: actions/cache@v1
         env:
           cache-name: cache-artifacts
