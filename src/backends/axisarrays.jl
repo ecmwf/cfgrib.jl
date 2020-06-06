@@ -32,7 +32,7 @@ function convert(::Type{AxisArrayWrapper}, dataset::DataSet)
     shared_axis = [Axis{Symbol(k)}(dataset.variables[k].data) for k in keys(dataset.dimensions)]
 
     res.datasets = NamedTuple{Tuple(Symbol.(multidimensional_keys))}((
-        AxisArray(cfgrib.convert(Array, dataset.variables[k].data), shared_axis...)
+        AxisArray(CfGRIB.convert(Array, dataset.variables[k].data), shared_axis...)
         for k in multidimensional_keys
     ))
 

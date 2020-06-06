@@ -1,13 +1,13 @@
 using Pkg
 
-using Documenter, cfgrib
+using Documenter, CfGRIB
 
 makedocs(
     format = Documenter.HTML(
         edit_link = :commit
     ),
-    modules = [cfgrib],
-    sitename="cfgrib.jl Documentation",
+    modules = [CfGRIB],
+    sitename="CfGRIB.jl Documentation",
     pages = [
         "Home" => "index.md",
     ],
