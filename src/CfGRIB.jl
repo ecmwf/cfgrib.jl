@@ -1,4 +1,4 @@
-module cfgrib
+module CfGRIB
 
 const cfgrib_jl_version = "0.0.0"
 

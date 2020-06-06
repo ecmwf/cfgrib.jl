@@ -14,7 +14,7 @@ using PyCall
 
 @testset "era5-levels-members DataSet parity" begin
     test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
-    res = cfgrib.DataSet(test_file)
+    res = CfGRIB.DataSet(test_file)
 
     @testset "Variables" begin
         @test res.variables["number"].dimensions == ("number",)
@@ -106,7 +106,7 @@ using PyCall
         @test res.variables["z"].dimensions == (
             "number", "time", "isobaricInhPa", "longitude", "latitude"
         )
-        @test typeof(res.variables["z"].data) == cfgrib.OnDiskArray
+        @test typeof(res.variables["z"].data) == CfGRIB.OnDiskArray
         @test size(res.variables["z"].data) == (10, 4, 2, 120, 61)
         @test_broken res.variables["z"].missing_value == 9999
         #  Currently these are not `OrderedDict`, and in the wrong order
@@ -181,7 +181,7 @@ using PyCall
         @test res.variables["t"].dimensions == (
             "number", "time", "isobaricInhPa", "longitude", "latitude"
         )
-        @test typeof(res.variables["t"].data) == cfgrib.OnDiskArray
+        @test typeof(res.variables["t"].data) == CfGRIB.OnDiskArray
         @test size(res.variables["t"].data) == (10, 4, 2, 120, 61)
         @test_broken res.variables["t"].missing_value == 9999
         #  TODO: Make these into 'OrderedDict', and order correctly
@@ -285,14 +285,14 @@ attributes_key_blacklist = [
 ]
 
 python_type_mapping = Dict(
-    "<class 'cfgrib.dataset.Variable'>" => cfgrib.Variable,
-    "<class 'cfgrib.dataset.OnDiskArray'>" => cfgrib.OnDiskArray
+    "<class 'cfgrib.dataset.Variable'>" => CfGRIB.Variable,
+    "<class 'cfgrib.dataset.OnDiskArray'>" => CfGRIB.OnDiskArray
 )
 
 @testset "pycall tests for $test_file" for test_file in test_files
     test_file_path = joinpath(dir_testfiles, test_file)
     res_py = cfgrib_dataset_py.open_file(test_file_path)
-    res_jl = cfgrib.DataSet(test_file_path)
+    res_jl = CfGRIB.DataSet(test_file_path)
 
     res_py_attributes = copy(res_py.attributes)
     [delete!(res_py_attributes, key) for key in attributes_key_blacklist]
@@ -333,10 +333,10 @@ python_type_mapping = Dict(
             else
                 @warn "Julia Native var $var of type $var_d_type_py not tested"
             end
-        #  If it is still a PyObject, it's most likely a cfgrib 'OnDiskArray'
+        #  If it is still a PyObject, it's most likely a CfGRIB 'OnDiskArray'
         elseif var_d_type_py == PyObject
             var_d_type_py_jl = python_type_mapping[var_d_type_py_native]
-            if var_d_type_py_jl == cfgrib.OnDiskArray
+            if var_d_type_py_jl == CfGRIB.OnDiskArray
                 @test var_jl.data.geo_ndim == var_py.data.geo_ndim
 
                 jl_geo_dims = var_jl.dimensions[end-var_jl.data.geo_ndim+1:end]

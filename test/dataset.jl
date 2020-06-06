@@ -3,23 +3,23 @@ using Test
 
 
 @testset "enforce_unique_attributes" begin
-    @test cfgrib.enforce_unique_attributes(
+    @test CfGRIB.enforce_unique_attributes(
         OrderedDict("key" => [1]), ["key"]) |> length == 1
 
     for missing_value in [missing, "undef", "unknown"]
-        @test cfgrib.enforce_unique_attributes(
+        @test CfGRIB.enforce_unique_attributes(
             OrderedDict("key" => [missing_value]), ["key"]) |> length == 0
     end
 
     @test_throws(
-        cfgrib.DatasetBuildError,
-        cfgrib.enforce_unique_attributes(OrderedDict("key" => [1, 2]), ["key"])
+        CfGRIB.DatasetBuildError,
+        CfGRIB.enforce_unique_attributes(OrderedDict("key" => [1, 2]), ["key"])
     )
 end
 
 
 @testset "OnDiskArray" begin
-    oda = cfgrib.OnDiskArray(
+    oda = CfGRIB.OnDiskArray(
         "some_path",
         (4, 3, 2, 1),
         OrderedDict(),
@@ -32,16 +32,16 @@ end
     @test size(oda) == oda.size
 
     test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
-    res = cfgrib.DataSet(test_file).variables["t"]
+    res = CfGRIB.DataSet(test_file).variables["t"]
 
-    @test res.data isa cfgrib.OnDiskArray
+    @test res.data isa CfGRIB.OnDiskArray
 
     @test size(res.data[:, :, 2, 120, 61]) == size(res.data)[1:2]
 end
 
 
 @testset "Variable" begin
-    res = cfgrib.Variable(
+    res = CfGRIB.Variable(
         ("lat", ),
         [1, 2, 3],
         Dict("Test" => 10)
@@ -55,18 +55,18 @@ end
         test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
         @test isfile(test_file)
 
-        index = cfgrib.FileIndex(
+        index = CfGRIB.FileIndex(
             test_file,
-            cfgrib.ALL_KEYS
+            CfGRIB.ALL_KEYS
         )
 
         @test index["paramId"] == [129, 130]
 
-        cfgrib.filter!(index, paramId=130)
+        CfGRIB.filter!(index, paramId=130)
 
         @test index["paramId"] == [130]
         #  TODO: Add logging
-        dims, data_var, coord_vars = cfgrib.build_variable_components(
+        dims, data_var, coord_vars = CfGRIB.build_variable_components(
             index
         )
 
@@ -88,16 +88,16 @@ end
     @testset "build_data_var_components_encode_cf_geography" begin
         test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
 
-        index = cfgrib.FileIndex(
+        index = CfGRIB.FileIndex(
             test_file,
-            cfgrib.ALL_KEYS
+            CfGRIB.ALL_KEYS
         )
 
-        cfgrib.filter!(index, paramId=130)
+        CfGRIB.filter!(index, paramId=130)
 
         @test index["paramId"] == [130]
         #  TODO: Add logging
-        dims, data_var, coord_vars = cfgrib.build_variable_components(
+        dims, data_var, coord_vars = CfGRIB.build_variable_components(
             index; encode_cf=("geography", )
         )
 
@@ -124,7 +124,7 @@ end
 @testset "DataSet" begin
     @testset "DataSet_default_encode" begin
         test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
-        res = cfgrib.DataSet(test_file)
+        res = CfGRIB.DataSet(test_file)
 
         @test "Conventions" in keys(res.attributes)
         @test "institution" in keys(res.attributes)
@@ -145,7 +145,7 @@ end
 
     @testset "DataSet_no_encode" begin
         test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
-        res = cfgrib.DataSet(test_file; encode_cf=())
+        res = CfGRIB.DataSet(test_file; encode_cf=())
 
         @test "Conventions" in keys(res.attributes)
         @test "institution" in keys(res.attributes)
@@ -166,7 +166,7 @@ end
 
     @testset "DataSet_cf_time" begin
         test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
-        res = cfgrib.DataSet(test_file; encode_cf=("time", ))
+        res = CfGRIB.DataSet(test_file; encode_cf=("time", ))
 
         @test "Conventions" in keys(res.attributes)
         @test "institution" in keys(res.attributes)
@@ -186,7 +186,7 @@ end
 
     @testset "DataSet_cf_geography" begin
         test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
-        res = cfgrib.DataSet(test_file; encode_cf=("geography", ))
+        res = CfGRIB.DataSet(test_file; encode_cf=("geography", ))
 
         @test "Conventions" in keys(res.attributes)
         @test "institution" in keys(res.attributes)
@@ -208,7 +208,7 @@ end
 
     @testset "DataSet_cf_vertical" begin
         test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
-        res = cfgrib.DataSet(test_file; encode_cf=("vertical", ))
+        res = CfGRIB.DataSet(test_file; encode_cf=("vertical", ))
 
         @test "Conventions" in keys(res.attributes)
         @test "institution" in keys(res.attributes)
@@ -229,7 +229,7 @@ end
 
     @testset "DataSet_gg_surface" begin
         test_file = joinpath(dir_testfiles, "regular_gg_sfc.grib")
-        res = cfgrib.DataSet(test_file)
+        res = CfGRIB.DataSet(test_file)
 
         @test "Conventions" in keys(res.attributes)
         @test "institution" in keys(res.attributes)

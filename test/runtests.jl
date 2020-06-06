@@ -1,12 +1,12 @@
-using cfgrib
+using CfGRIB
 using Test
 
 
-const dir_tests = abspath(joinpath(dirname(pathof(cfgrib)), "..", "test"))
+const dir_tests = abspath(joinpath(dirname(pathof(CfGRIB)), "..", "test"))
 const dir_testfiles = abspath(joinpath(dir_tests, "sample-data"))
 
 
-@testset "cfgrib.jl" begin
+@testset "CfGRIB.jl" begin
     @testset "Indexing" begin
         include("indexing.jl")
     end

@@ -29,7 +29,7 @@ end
 
 #  Dummy FileIndex for testing
 function dummy_file_index()
-    fileindex = cfgrib.FileIndex()
+    fileindex = CfGRIB.FileIndex()
 
     fileindex.grib_path = "./dummy-path.grib"
 
@@ -43,7 +43,7 @@ dfi = dummy_file_index()
 
 #  When new fields are added, add any new required tests and then
 #  add the field to this list
-@test fieldnames(cfgrib.FileIndex) == (
+@test fieldnames(CfGRIB.FileIndex) == (
     :allowed_protocol_version, :grib_path, :index_path, :index_keys, :offsets,
     :message_lengths, :header_values, :filter_by_keys
 )
@@ -58,10 +58,10 @@ dfi = dummy_file_index()
 @test ! isdefined(dfi, :filter_by_keys)
 
 #  Will fail on version change
-cfgrib.index_path!(dfi)
+CfGRIB.index_path!(dfi)
 @test dfi.index_path == "./dummy-path.grib.60099cfb35e25e30.idx"
 
-cfgrib.get_header_values!(dfi)
+CfGRIB.get_header_values!(dfi)
 expected_header_values = OrderedDict(
     "int"      => [10],
     "array"    => Array{Int64,1}[[1, 2, 3], [1, 2, 3, 5]],
@@ -74,16 +74,16 @@ expected_header_values = OrderedDict(
 @testset begin
     test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
 
-    index = cfgrib.FileIndex(
+    index = CfGRIB.FileIndex(
         test_file,
-        cfgrib.ALL_KEYS
+        CfGRIB.ALL_KEYS
     )
 
-    message = cfgrib.first(index)
+    message = CfGRIB.first(index)
 
-    cfgrib.filter!(index, paramId=130)
+    CfGRIB.filter!(index, paramId=130)
 end
 
 #  Not implemented yet
-@test_broken cfgrib.save_indexfile!(dfi)
-@test_broken cfgrib.from_indexfile!(dfi)
+@test_broken CfGRIB.save_indexfile!(dfi)
+@test_broken CfGRIB.from_indexfile!(dfi)

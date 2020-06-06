@@ -1,5 +1,5 @@
-name = "cfgrib"
-uuid = "cb67cb4b-e5c8-45d4-aff0-3ae3657ca610"
+name = "CfGRIB"
+uuid = "b476ad61-2aff-463c-b862-1d4433a0d503"
 authors = ["robert.rosca <32569096+RobertRosca@users.noreply.github.com >"]
 version = "0.1.0"
 

@@ -173,7 +173,7 @@ function build_geography_coordinates(
 
     first_message = first(index)
     geo_coord_vars = OrderedDict()
-    grid_type = cfgrib.getone(index, "gridType")
+    grid_type = CfGRIB.getone(index, "gridType")
 
     if "geography" in encode_cf && grid_type in GRID_TYPES_DIMENSION_COORDS
         column_major = getone(index, "jPointsAreConsecutive") != 0
@@ -192,7 +192,7 @@ function build_geography_coordinates(
         geo_coord_vars["latitude"] = Variable(
             dimensions = ("latitude",),
             data = latitudes,
-            attributes = cfgrib.COORD_ATTRS["latitude"]
+            attributes = CfGRIB.COORD_ATTRS["latitude"]
         )
 
         if latitudes[1] > latitudes[end]
@@ -203,7 +203,7 @@ function build_geography_coordinates(
         geo_coord_vars["longitude"] = Variable(
             dimensions = ("longitude",),
             data = first_message["distinctLongitudes"],
-            attributes = cfgrib.COORD_ATTRS["longitude"],
+            attributes = CfGRIB.COORD_ATTRS["longitude"],
         )
     elseif "geography" in encode_cf && grid_type in GRID_TYPES_2D_NON_DIMENSION_COORDS
         column_major = getone(index, "jPointsAreConsecutive") != 0
@@ -263,7 +263,7 @@ function encode_cf_first(
     #  NOTE: marking value as `const` just means it cannot be reassigned, the
     #  value can still be mutated/appended to, so be carfeul `append!`ing to
     #  the constants
-    coords_map = deepcopy(cfgrib.ENSEMBLE_KEYS)
+    coords_map = deepcopy(CfGRIB.ENSEMBLE_KEYS)
     param_id = get(data_var_attrs, "GRIB_paramId", missing)
     data_var_attrs["long_name"] = "original GRIB paramId: $(param_id)"
     data_var_attrs["units"] = "1"
@@ -283,19 +283,19 @@ function encode_cf_first(
     end
 
     if "time" in encode_cf
-        if issubset(time_dims, cfgrib.ALL_REF_TIME_KEYS)
+        if issubset(time_dims, CfGRIB.ALL_REF_TIME_KEYS)
             append!(coords_map, time_dims)
         else
             throw("time_dims $(time_dims) is not a subset of " *
-                  "$(cfgrib.ALL_REF_TIME_KEYS)"
+                  "$(CfGRIB.ALL_REF_TIME_KEYS)"
             )
         end
     else
-        append!(coords_map, cfgrib.DATA_TIME_KEYS)
+        append!(coords_map, CfGRIB.DATA_TIME_KEYS)
     end
 
-    append!(coords_map, cfgrib.VERTICAL_KEYS)
-    append!(coords_map, cfgrib.SPECTRA_KEYS)
+    append!(coords_map, CfGRIB.VERTICAL_KEYS)
+    append!(coords_map, CfGRIB.SPECTRA_KEYS)
 
     return coords_map
 end
@@ -307,10 +307,10 @@ function build_variable_components(
         errors="warn", squeeze=true, read_keys=String[],
         time_dims=("time", "step")
     )
-    data_var_attrs_keys = cfgrib.DATA_ATTRIBUTES_KEYS
+    data_var_attrs_keys = CfGRIB.DATA_ATTRIBUTES_KEYS
     data_var_attrs_keys = [
         data_var_attrs_keys;
-        get(cfgrib.GRID_TYPE_MAP, index["gridType"][1], [])
+        get(CfGRIB.GRID_TYPE_MAP, index["gridType"][1], [])
     ]
     data_var_attrs_keys = [data_var_attrs_keys; read_keys]
 
@@ -343,7 +343,7 @@ function build_variable_components(
             "units"     => "1",
         )
 
-        merge!(attributes, copy(get(cfgrib.COORD_ATTRS, coord_name, Dict())))
+        merge!(attributes, copy(get(CfGRIB.COORD_ATTRS, coord_name, Dict())))
 
         data = sort(
             values,
@@ -411,7 +411,7 @@ function build_variable_components(
             coord_vars["time"].data,
             coord_vars["step"].data
         )
-        attrs = cfgrib.COORD_ATTRS["valid_time"]
+        attrs = CfGRIB.COORD_ATTRS["valid_time"]
         coord_vars["valid_time"] = Variable(dims, time_data, attrs)
     end
 

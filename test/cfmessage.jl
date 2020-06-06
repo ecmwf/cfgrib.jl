@@ -4,7 +4,7 @@ using GRIB
 
 
 @testset "from_grib_date_time" begin
-    result = cfgrib.from_grib_date_time(20160706, 1944)
+    result = CfGRIB.from_grib_date_time(20160706, 1944)
 
     @test result == 1467834240
 end
@@ -14,7 +14,7 @@ end
     forecast_reference_time = [0]
     forecast_period = [0]
 
-    vt_dims, vt_data = cfgrib.build_valid_time(
+    vt_dims, vt_data = CfGRIB.build_valid_time(
         forecast_reference_time,
         forecast_period
     )
@@ -26,7 +26,7 @@ end
     forecast_reference_time = [0, 31536000]
     forecast_period = 0
 
-    vt_dims, vt_data = cfgrib.build_valid_time(
+    vt_dims, vt_data = CfGRIB.build_valid_time(
         forecast_reference_time,
         forecast_period
     )
@@ -38,7 +38,7 @@ end
     forecast_reference_time = 0
     forecast_period = [0, 12, 24, 36]
 
-    vt_dims, vt_data = cfgrib.build_valid_time(
+    vt_dims, vt_data = CfGRIB.build_valid_time(
         forecast_reference_time,
         forecast_period
     )
@@ -51,7 +51,7 @@ end
     forecast_reference_time = [0, 31536000]
     forecast_period = [0, 12, 24, 36]
 
-    vt_dims, vt_data = cfgrib.build_valid_time(
+    vt_dims, vt_data = CfGRIB.build_valid_time(
         forecast_reference_time,
         forecast_period
     )
