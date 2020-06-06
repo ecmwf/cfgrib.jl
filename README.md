@@ -66,10 +66,13 @@ using cfgrib
   - write up manual pages
     - examples
     - additional context around docstrings
+  - find way to sync doc readme to github page readme
 - Package:
   - see random todo's scattered through code
   - major:
-    - filter_by_index
-    - index file generation and loading
     - xarray-like backend
+    - integration into FileIO
+    - filter_by_index
+    - rename package to CfGRIB
+    - index file generation and loading
     - make code more idiomatic to julia
