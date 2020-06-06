@@ -9,6 +9,7 @@ jobs:
     continue-on-error: ${{ matrix.continue-on-error }}
     strategy:
       matrix:
+        continue-on-error: [false]
         version:
           - '1.4'
           - 'nightly'
