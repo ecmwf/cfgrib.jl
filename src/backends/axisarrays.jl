@@ -1,6 +1,7 @@
+using DataStructures
+
 using AxisArrays
 
-using DataStructures
 
 mutable struct AxisArrayWrapper
     dimensions::OrderedDict

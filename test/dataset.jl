@@ -1,7 +1,5 @@
-using Test
-
-using cfgrib
 using DataStructures
+using Test
 
 
 @testset "enforce_unique_attributes" begin

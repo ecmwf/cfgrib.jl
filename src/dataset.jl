@@ -4,6 +4,9 @@ using Dates
 using JSON
 
 
+export DataSet
+
+
 struct DatasetBuildError <: Exception
     error_message::String
 end

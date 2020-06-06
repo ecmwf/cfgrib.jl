@@ -2,6 +2,9 @@ using DataStructures
 using GRIB
 
 
+export FileIndex
+
+
 """
     FileIndex
 

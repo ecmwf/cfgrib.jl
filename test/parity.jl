@@ -1,8 +1,6 @@
 using DataStructures
 using Test
 
-using cfgrib
-
 #  Setup for pycall tests - done by travis, uncomment for manual run
 # using Conda; ENV["PYTHON"] = Conda.PYTHONDIR
 # using Pkg

@@ -1,6 +1,5 @@
-using Test
-
 using cfgrib
+using Test
 
 
 const dir_tests = abspath(joinpath(dirname(pathof(cfgrib)), "..", "test"))
