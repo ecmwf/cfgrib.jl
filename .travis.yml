@@ -22,7 +22,7 @@ script:
  - julia --project --color=yes --check-bounds=yes -e 'using Pkg; Pkg.add("Conda"), Pkg.add("PyCall")'
  - julia --project --color=yes --check-bounds=yes -e 'using Pkg; using Conda; ENV["PYTHON"] = Conda.PYTHONDIR; Pkg.build("PyCall")'
  - julia --project --color=yes --check-bounds=yes -e 'using Pkg; using Conda; Conda.add_channel("conda-forge"); Conda.add("cfgrib")'
- - julia --project --color=yes --check-bounds=yes -e 'using Pkg; Pkg.test("cfgrib", coverage=true);'
+ - julia --project --color=yes --check-bounds=yes -e 'using Pkg; Pkg.test("CfGRIB", coverage=true);'
 notifications:
   email: false
 after_success:
