@@ -6,19 +6,21 @@ jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }}
     runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.allow_failures }}
     strategy:
       fail-fast: false
       matrix:
         version:
-          - '1.0'
           - '1.4'
           - 'nightly'
         os:
           - ubuntu-latest
           - macOS-latest
-          - windows-latest
         arch:
           - x64
+        include:
+          - version: 'nightly'
+            allow_failures: true
     steps:
       - uses: actions/checkout@v2
       - run: rm -rf /github/home/julia
@@ -48,7 +50,6 @@ jobs:
             ENV["PYTHON"] = Conda.PYTHONDIR; Pkg.build("PyCall");\
             Conda.add_channel("conda-forge"); Conda.add("cfgrib");\
           '
-      - run: julia --version
       - uses: julia-actions/julia-buildpkg@latest
       - uses: julia-actions/julia-runtest@latest
       - uses: julia-actions/julia-uploadcodecov@latest
