@@ -1,0 +1,9 @@
+set -ex
+
+echo "Installing GRIB.jl"
+
+julia --project --color=yes --check-bounds=yes -e '\
+    using Pkg;\
+    Pkg.develop(PackageSpec(url="https://github.com/weech/GRIB.jl.git"));\
+    Pkg.instantiate(); Pkg.build();\
+'
