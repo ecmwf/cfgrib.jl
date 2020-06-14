@@ -60,7 +60,7 @@ function Base.show(io::IO, mime::MIME"text/plain", da::CfGRIB.AxisArrayWrapper)
         ddd_idx = findfirst(occursin.("…", split(line, ",")))
         while sum(length.(new_line))+length(new_line)+3 > display_width
             deleteat!(new_line, ddd_idx)
-            str_new_elipses = "$(new_line[ddd_idx-1]) …$(new_line[ddd_idx])"
+            str_new_elipses = "$(new_line[ddd_idx-1])  … $(new_line[ddd_idx])"
             deleteat!(new_line, ddd_idx-1)
             new_line[ddd_idx-1] = str_new_elipses
             ddd_idx = ddd_idx - 1
