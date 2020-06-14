@@ -1,25 +1,23 @@
 using DataStructures
-
 using AxisArrays
 
+import Base: getindex, keys, convert, show, IO, MIME
 
-mutable struct AxisArrayWrapper
+
+struct AxisArrayWrapper
     dimensions::OrderedDict
     datasets::T where T <: NamedTuple
     attributes::OrderedDict
     encoding::Dict
-
-    AxisArrayWrapper() = new()
 end
 
-Base.getindex(obj::AxisArrayWrapper, key) = obj.datasets[key]
-Base.keys(obj::AxisArrayWrapper) = keys(obj.datasets)
+getindex(obj::AxisArrayWrapper, key) = obj.datasets[key]
+keys(obj::AxisArrayWrapper) = keys(obj.datasets)
 
 function convert(::Type{AxisArrayWrapper}, dataset::DataSet)
-    res = AxisArrayWrapper()
-    res.dimensions = dataset.dimensions
-    res.attributes = dataset.attributes
-    res.encoding = dataset.encoding
+    dimensions = dataset.dimensions
+    attributes = dataset.attributes
+    encoding = dataset.encoding
 
     multidimensional_idx =  (
         [size(v.data) for v in values(dataset.variables)]
@@ -31,10 +29,58 @@ function convert(::Type{AxisArrayWrapper}, dataset::DataSet)
     shared_dimensions = [dataset.variables[k] for k in keys(dataset.dimensions)]
     shared_axis = [Axis{Symbol(k)}(dataset.variables[k].data) for k in keys(dataset.dimensions)]
 
-    res.datasets = NamedTuple{Tuple(Symbol.(multidimensional_keys))}((
+    datasets = NamedTuple{Tuple(Symbol.(multidimensional_keys))}((
         AxisArray(CfGRIB.convert(Array, dataset.variables[k].data), shared_axis...)
         for k in multidimensional_keys
     ))
 
-    return res
+    return AxisArrayWrapper(dimensions, datasets, attributes, encoding)
+end
+
+function Base.show(io::IO, mime::MIME"text/plain", da::CfGRIB.AxisArrayWrapper)
+    dimensions_list = join(["$k: $v" for (k,v) in pairs(da.dimensions)], ", ")
+    str_dimensions = "Dimensions ($(length(da.dimensions))): $dimensions_list"
+
+    dataset_list = [summary(ds) for ds in da.datasets]
+    axes_list = split(dataset_list[1], "\n")[2:end-1]
+    axes_list = replace.(axes_list, "    "=>"  ")
+    #  When arrays are printed their length is limited by the current displaysize
+    #  so adding text befor/after will make the text overflow to the next line
+    #  here we do a hacky fix for that
+    display_width = displaysize(io)[2]
+    axes_list = split(dataset_list[1], "\n")[2:end-1]
+    axes_list = replace.(axes_list, "    "=>"  ")
+    for (i, line) in enumerate(axes_list)
+        new_line = split(line, ",")
+        if length(line) > display_width
+            current_elipses_idx = findfirst(occursin.("…", split(line, ",")))
+            while sum(length.(new_line))+length(new_line)+3 > display_width
+                deleteat!(new_line, current_elipses_idx)
+                str_new_elipses = "$(new_line[current_elipses_idx-1]) …$(new_line[current_elipses_idx])"
+                deleteat!(new_line, current_elipses_idx-1)
+                new_line[current_elipses_idx-1] = str_new_elipses
+                current_elipses_idx = current_elipses_idx - 1
+            end
+        end
+
+        axes_list[i] = join(new_line, ",")
+    end
+    axes_list = join(axes_list, "\n")
+    str_axes = "Axes: \n$axes_list"
+
+    dataset_data = [split(dl, "\n")[end] for dl in dataset_list]
+    dataset_data = [
+        "  "*replace(s, "And data"=>keys(da.datasets)[i])
+        for (i, s)
+        in enumerate(dataset_data)
+    ]
+    dataset_variables = join(dataset_data, "\n")
+
+    str_variables = "Variables:\n$dataset_variables"
+
+    str_show = join([str_dimensions, str_axes, str_variables], "\n")
+
+    println(str_show)
+    print("Attributes: ")
+    show(io, mime, da.attributes)
 end
