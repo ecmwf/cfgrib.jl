@@ -3,13 +3,26 @@ using FileIO
 
 #  Goal is for the backends to be optional, so only include the files if the
 #  user has the required backend installed
-BACKEND_PROVIDERS = [:AxisArrays]
+BACKEND_PROVIDERS = [:AxisArrays, :DimensionalData]
+AVAILABLE_BACKENDS = []
 DEFAULT_BACKEND = DataSet
+
+try
+    using DimensionalData
+    include("./backends/dimensionaldata.jl")
+    global DEFAULT_BACKEND = DimensionalArrayWrapper
+    append!(AVAILABLE_BACKENDS, [:DimensionalArray])
+catch e
+    if !(e isa ArgumentError)
+        throw(e)
+    end
+end
 
 try
     using AxisArrays
     include("./backends/axisarrays.jl")
     global DEFAULT_BACKEND = AxisArrayWrapper
+    append!(AVAILABLE_BACKENDS, [:AxisArray])
 catch e
     if !(e isa ArgumentError)
         throw(e)
