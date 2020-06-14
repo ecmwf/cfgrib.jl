@@ -70,8 +70,12 @@ using CfGRIB
 - Package:
   - see random todo's scattered through code
   - major:
-    - xarray-like backend
-    - integration into FileIO
+    - [x] xarray-like backend
+      - [x] AxisArrays
+      - [x] DimensionalData
+    - [ ] integration into FileIO
+      - [x] integration set up
+      - [ ] PR to add format to FileIO
     - filter_by_index
     - index file generation and loading
     - make code more idiomatic to julia
