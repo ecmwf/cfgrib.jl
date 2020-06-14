@@ -37,6 +37,8 @@ function convert(::Type{AxisArrayWrapper}, dataset::DataSet)
     return AxisArrayWrapper(dimensions, datasets, attributes, encoding)
 end
 
+convert(::Type{AxisArray}, dataset::DataSet) = convert(AxisArrayWrapper, dataset)
+
 function Base.show(io::IO, mime::MIME"text/plain", da::CfGRIB.AxisArrayWrapper)
     dimensions_list = join(["$k: $v" for (k,v) in pairs(da.dimensions)], ", ")
     str_dimensions = "Dimensions ($(length(da.dimensions))): $dimensions_list"
