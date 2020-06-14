@@ -11,8 +11,17 @@ struct AxisArrayWrapper
     encoding::Dict
 end
 
-getindex(obj::AxisArrayWrapper, key) = obj.datasets[key]
-keys(obj::AxisArrayWrapper) = keys(obj.datasets)
+getindex(obj::AxisArrayWrapper, key) = getfield(obj, :datasets)[key]
+keys(obj::AxisArrayWrapper) = keys(getfield(obj, :datasets))
+haskey(obj::AxisArrayWrapper, key) = key in keys(obj)
+
+function Base.getproperty(obj::AxisArrayWrapper, key::Symbol)
+    if key in keys(obj)
+        return getindex(obj, key)
+    else
+        return getfield(obj, key)
+    end
+end
 
 function convert(::Type{AxisArrayWrapper}, dataset::DataSet)
     dimensions = dataset.dimensions
@@ -41,7 +50,7 @@ convert(::Type{AxisArray}, dataset::DataSet) = convert(AxisArrayWrapper, dataset
 
 function Base.show(io::IO, mime::MIME"text/plain", da::CfGRIB.AxisArrayWrapper)
     dimensions_list = join(["$k: $v" for (k,v) in pairs(da.dimensions)], ", ")
-    str_dimensions = "Dimensions ($(length(da.dimensions))): $dimensions_list"
+    str_dimensions = " Dimensions ($(length(da.dimensions))):\n  $dimensions_list"
 
     dataset_list = [summary(ds) for ds in da.datasets]
     axes_list = split(dataset_list[1], "\n")[2:end-1]
@@ -72,21 +81,23 @@ function Base.show(io::IO, mime::MIME"text/plain", da::CfGRIB.AxisArrayWrapper)
     end
 
     axes_list = join(axes_list, "\n")
-    str_axes = "Axes: \n$axes_list"
+    str_axes = " Axes: \n$axes_list"
 
     dataset_data = [split(dl, "\n")[end] for dl in dataset_list]
     dataset_data = [
-        "  "*replace(s, "And data"=>keys(da.datasets)[i])
+        "   "*replace(s, "And data, a"=>string(keys(da.datasets)[i])*",")
         for (i, s)
         in enumerate(dataset_data)
     ]
     dataset_variables = join(dataset_data, "\n")
 
-    str_variables = "Variables:\n$dataset_variables"
+    str_variables = " Variables:\n$dataset_variables"
 
     str_show = join([str_dimensions, str_axes, str_variables], "\n")
 
+    println(io, "AxisArrayWrapper with $(length(da.datasets)) dataset(s)")
+
     println(str_show)
-    print("Attributes: ")
+    print(" Attributes: ")
     show(io, mime, da.attributes)
 end
