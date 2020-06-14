@@ -48,23 +48,27 @@ function Base.show(io::IO, mime::MIME"text/plain", da::CfGRIB.AxisArrayWrapper)
     #  so adding text befor/after will make the text overflow to the next line
     #  here we do a hacky fix for that
     display_width = displaysize(io)[2]
-    axes_list = split(dataset_list[1], "\n")[2:end-1]
-    axes_list = replace.(axes_list, "    "=>"  ")
     for (i, line) in enumerate(axes_list)
+        if length(line) <= display_width
+            continue
+        end
+
         new_line = split(line, ",")
-        if length(line) > display_width
-            current_elipses_idx = findfirst(occursin.("…", split(line, ",")))
-            while sum(length.(new_line))+length(new_line)+3 > display_width
-                deleteat!(new_line, current_elipses_idx)
-                str_new_elipses = "$(new_line[current_elipses_idx-1]) …$(new_line[current_elipses_idx])"
-                deleteat!(new_line, current_elipses_idx-1)
-                new_line[current_elipses_idx-1] = str_new_elipses
-                current_elipses_idx = current_elipses_idx - 1
-            end
+
+        #  dot dot dot (…) index - index of pair of values that has elipses
+        #  e.g. `15.0 … 342.0`
+        ddd_idx = findfirst(occursin.("…", split(line, ",")))
+        while sum(length.(new_line))+length(new_line)+3 > display_width
+            deleteat!(new_line, ddd_idx)
+            str_new_elipses = "$(new_line[ddd_idx-1]) …$(new_line[ddd_idx])"
+            deleteat!(new_line, ddd_idx-1)
+            new_line[ddd_idx-1] = str_new_elipses
+            ddd_idx = ddd_idx - 1
         end
 
         axes_list[i] = join(new_line, ",")
     end
+
     axes_list = join(axes_list, "\n")
     str_axes = "Axes: \n$axes_list"
 
