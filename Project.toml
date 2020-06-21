@@ -25,8 +25,9 @@ julia = "1.2"
 [extras]
 AxisArrays = "39de3d68-74b9-583c-8d2d-e117c070f3a9"
 Conda = "8f4d0f93-b110-5947-807f-2305c1781a2d"
+DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
 PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Conda", "PyCall"]
+test = ["Test", "AxisArrays", "Conda", "DimensionalData", "PyCall"]
