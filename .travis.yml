@@ -3,16 +3,13 @@ language: julia
 os:
   - linux
   - osx
-  - windows
 julia:
-  - 1.2
   - 1.4
   - nightly
 matrix:
   allow_failures:
     - julia: nightly
     - os: osx
-    - os: windows
   fast_finish: true
 script:
   - julia --project --color=yes --check-bounds=yes -e 'using Pkg; pkg"add https://github.com/weech/GRIB.jl.git#5710a1f462e888ad38f6e3b282df3fb953478d1b"; Pkg.instantiate()'
