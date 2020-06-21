@@ -1,0 +1,4 @@
+/binder/** linguist-detectable=false
+/dev/** linguist-detectable=false
+/docs/** linguist-detectable=false
+/notebooks/** linguist-detectable=false
