@@ -1,5 +1,3 @@
-module Backends
-
 using FileIO
 using CfGRIB
 
@@ -29,7 +27,7 @@ catch e
     if !(e isa ArgumentError)
         throw(e)
     end
-end
+end#
 
 #  If no backends could be loaded print a warning
 if DEFAULT_BACKEND == DataSet
@@ -39,11 +37,11 @@ if DEFAULT_BACKEND == DataSet
 end
 
 
-function load(f::String; backend=DEFAULT_BACKEND, kwargs...)
-    ds = DataSet(f, kwargs...)
+# function load(f::String; backend=DEFAULT_BACKEND, kwargs...)
+#     ds = DataSet(f, kwargs...)
 
-    return convert(backend, ds)
-end
+#     return convert(backend, ds)
+# end
 
 function fileio_load(f::File{format"GRIB"}; backend=DEFAULT_BACKEND, kwargs...)
     """ Load command for FileIO integration. Following line must be in the
@@ -51,7 +49,6 @@ function fileio_load(f::File{format"GRIB"}; backend=DEFAULT_BACKEND, kwargs...)
 
         add_format(format"GRIB", UInt8[0x47, 0x52, 0x49, 0x42], ".grib", [:CfGRIB])
     """
-    CfGRIB.load(f.filename; backend=backend, kwargs...)
-end
-
+    ds = DataSet(f.filename, kwargs...)
+    return convert(backend, ds)
 end
