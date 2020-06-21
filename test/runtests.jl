@@ -22,4 +22,8 @@ const dir_testfiles = abspath(joinpath(dir_tests, "sample-data"))
     @testset "Parity" begin
         include("parity.jl")
     end
+
+    @testset "Backends" begin
+        include("backends.jl")
+    end
 end
