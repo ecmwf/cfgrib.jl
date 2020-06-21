@@ -1,5 +1,7 @@
-using FileIO
+module Backends
 
+using FileIO
+using CfGRIB
 
 #  Goal is for the backends to be optional, so only include the files if the
 #  user has the required backend installed
@@ -50,4 +52,6 @@ function fileio_load(f::File{format"GRIB"}; backend=DEFAULT_BACKEND, kwargs...)
         add_format(format"GRIB", UInt8[0x47, 0x52, 0x49, 0x42], ".grib", [:CfGRIB])
     """
     CfGRIB.load(f.filename; backend=backend, kwargs...)
+end
+
 end
