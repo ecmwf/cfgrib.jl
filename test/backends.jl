@@ -5,6 +5,8 @@ using AxisArrays
 using DimensionalData
 using FileIO
 
+import REPL
+
 test_file = joinpath(dir_testfiles, "era5-levels-members.grib")
 
 BACKENDS = [
@@ -42,6 +44,18 @@ BACKENDS = [
         @test getproperty(da, key)[1] isa Number
         @test getproperty(da, key) == da[key]
         @test haskey(da, key)
+    end
+
+    @testset "test show for $backend" begin
+        #  Thanks to:
+        # https://medium.com/@Jernfrost/exploring-julia-repl-internals-6b19667a7a62
+        term = REPL.Terminals.TTYTerminal("dumb", stdin, stdout, stderr)
+        io = IOContext(term)
+        mime = MIME{Symbol("text/plain")}()
+
+        println("Show test for $backend:")
+        @test isnothing(show(io, mime, da))
+        println("\n")
     end
 end
 
