@@ -46,6 +46,9 @@ BACKENDS = [
         @test haskey(da, key)
     end
 
+    #  Here to check that getproperty overloading hasn't broken getfield
+    @test ds.encoding isa Dict
+
     @testset "test show for $backend" begin
         #  Thanks to:
         # https://medium.com/@Jernfrost/exploring-julia-repl-internals-6b19667a7a62
