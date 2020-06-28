@@ -121,6 +121,50 @@ end
 end
 
 
+@testset "build_dataset_components_time_dims" begin
+    test_file = joinpath(dir_testfiles, "forecast_monthly_ukmo.grib")
+    index = CfGRIB.FileIndex(
+        test_file,
+        CfGRIB.ALL_KEYS
+    )
+
+    dims, _, _ = CfGRIB.build_dataset_components(
+        index
+    )
+    @test dims == OrderedDict(
+        "latitude"  => 6,
+        "longitude" => 11,
+        "number"    => 28,
+        "step"      => 20,
+        "time"      => 8
+    )
+
+    dims, _, _ = CfGRIB.build_dataset_components(
+        index,
+        time_dims=("indexing_time", "verifying_time")
+    )
+    @test dims == OrderedDict(
+        "number" => 28,
+        "indexing_time" => 2,
+        "verifying_time" => 4,
+        "latitude" => 6,
+        "longitude" => 11,
+    )
+
+    dims, _, _ = CfGRIB.build_dataset_components(
+        index,
+        time_dims=("indexing_time", "step")
+    )
+    @test dims == OrderedDict(
+        "number" => 28,
+        "indexing_time" => 2,
+        "step" => 20,
+        "latitude" => 6,
+        "longitude" => 11
+    )
+end
+
+
 @testset "DataSet" begin
     @testset "DataSet_default_encode" begin
         test_file = joinpath(dir_testfiles, "era5-levels-members.grib")

@@ -116,7 +116,7 @@ const VERTICAL_KEYS = ["level"]
 const DATA_TIME_KEYS = ["dataDate", "dataTime", "endStep"]
 const ALL_REF_TIME_KEYS = [
     "time", "step",
-    "valid_time", "verifying_time",
+    "valid_time", "verifying_time", "indexing_time",
     "forecastMonth"
 ]
 const SPECTRA_KEYS = ["directionNumber", "frequencyNumber"]
@@ -210,6 +210,12 @@ const COORD_ATTRS = Dict(
         "calendar"         => "proleptic_gregorian",
         "standard_name"    => "forecast_reference_time",
         "long_name"        => "initial time of forecast",
+    ),
+    "indexing_time"        => Dict(
+        "units"            => "seconds since 1970-01-01T00:00:00",
+        "calendar"         => "proleptic_gregorian",
+        "standard_name"    => "forecast_reference_time",
+        "long_name"        => "nominal initial time of forecast",
     ),
     "valid_time"           => Dict(
         "units"            => "seconds since 1970-01-01T00:00:00",

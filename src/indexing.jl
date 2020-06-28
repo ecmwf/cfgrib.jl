@@ -96,10 +96,19 @@ function from_gribfile!(index::FileIndex)
         for (nmessage, message) in enumerate(f)
             header_values = Array{Any}(undef, index_key_count)
             for (i, key) in enumerate(index_keys)
-                value = haskey(message, key) ? message[key] : missing
-                value = value isa Array ? Tuple(value) : value
-                #  TODO: use dispatch to do this via GRIB
-                value = key == "time" ? from_grib_date_time(message) : value
+                value = read_message(message, key)
+
+                # #  Useful for debugging
+                # value_naive = haskey(message, key) ? message[key] : missing
+                # value_naive = value_naive isa Array ? Tuple(value_naive) : value_naive
+                # value_naive = key == "time" ? from_grib_date_time(message) : value_naive
+                # if any(ismissing.([value_naive, value]))
+                #     if !all(ismissing.([value_naive, value]))
+                #         println("$key: $value vs $value_naive")
+                #     end
+                # elseif value_naive != value
+                #     println("$key: $value vs $value_naive")
+                # end
 
                 header_values[i] = value
             end
@@ -173,11 +182,12 @@ function filter_offsets(index::FileIndex; query...)
 
     for (header_values, offset_values) in index.offsets
         for (k, v) in query
-            if header_values[k] != v
+            if ismissing(header_values[k]) && ismissing(v)
+                append!(filtered_offsets, [Pair(header_values, offset_values)])
+            elseif ismissing(header_values[k]) || header_values[k] != v
                 break
             else
                 append!(filtered_offsets, [Pair(header_values, offset_values)])
-                break
             end
         end
     end
