@@ -85,8 +85,6 @@ function from_grib_month(
 end
 
 
-#  TODO: This probably won't work translated directly from python
-#  check cases where time and step are effectively missing
 function build_valid_time(time::Int, step::Int)
     step_s = step * 3600
 
@@ -121,8 +119,6 @@ function build_valid_time(time::Array{Int, 1}, step::Array{Int, 1})
         return build_valid_time(time[1], step[1])
     end
 
-    #  TODO: Julia is column major, numpy is row major, not too sure what
-    #  the correct approach would be here...
     data = time' .+ step_s
     dims = ("time", "step")
     return dims, data

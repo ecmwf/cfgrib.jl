@@ -110,8 +110,6 @@ end
             "latitude"  => 61
         )
 
-        #  TODO: Another area where the row/column major issue affects how the
-        #  longitude/latitude area accessed
         @test size(data_var.data) == (10, 2, 2, 2, 120, 61)
 
         data = convert(Array, data_var.data)

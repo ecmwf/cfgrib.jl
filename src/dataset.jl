@@ -42,7 +42,7 @@ struct OnDiskArray
     grib_path::String
     size::Tuple
     offsets::OrderedDict
-    message_lengths::Array{Int, 1} #  TODO: Fix seek offset issue
+    message_lengths::Array{Int, 1}
     missing_value::Any
     geo_ndim::Int
     dtype::Type
@@ -101,14 +101,12 @@ function Base.getindex(obj::OnDiskArray, key...)
         end
     end
 
-    #  TODO: Weird 'correction, not sure if this the right approach. In the case
+    #  Weird 'correction, not sure if this the right approach. In the case
     #  where the key is like [:, :, *2*, 120, 61] you might have an array field of
     #  shape (10, 4, 1, 120, 61), which correctly means that only the 2nd layer
     #  was loaded. However this means that the index *2* should now be 1
     corrected_key = collect(Any, deepcopy(key))
     corrected_key[collect(array_field_shape) .== 1] .= 1
-    #  TODO: Skipped some sections of the python equivalent code as I don't get
-    #  what they're for. Should check this out later
     replace!(array_field, obj.missing_value=>missing)
     return getindex(array_field, corrected_key...)
 end
@@ -177,7 +175,7 @@ function build_geography_coordinates(
 
     if "geography" in encode_cf && grid_type in GRID_TYPES_DIMENSION_COORDS
         column_major = getone(index, "jPointsAreConsecutive") != 0
-        #  TODO: column/row major has always confused me, not sure if this
+        #  column/row major has always confused me, not sure if this
         #  is the correct approach here. Idea is taken from how GRIB.jl
         #  handles reading data with `codes_grib_get_data`:
         #  https://github.com/weech/GRIB.jl/blob/5710a1f462e888ad38f6e3b282df3fb953478d1b/src/message.jl#L355
@@ -325,7 +323,7 @@ function build_variable_components(
         values = index[coord_key]
         if length(values) == 1 && ismissing(values[1])
             #  TODO: Add logging
-            #  @warn "Missing from GRIB Stream $(coord_key)"
+             @warn "Missing from GRIB Stream $(coord_key)"
             continue
         end
 
@@ -399,7 +397,7 @@ function build_variable_components(
         index.grib_path,
         shape,
         offsets,
-        index.message_lengths, #  TODO: Fix seek offset issue
+        index.message_lengths,
         missing_value,
         length(geo_dims),
         Float32 #  TODO: Should be the actual type of the data...

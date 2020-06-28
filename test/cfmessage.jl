@@ -57,8 +57,7 @@ end
     )
 
     @test vt_dims == ("time", "step")
-    #  TODO: Julia is column major, numpy is row major, not too sure what
-    #  the correct approach would be here...
+
     @test size(vt_data) == (4, 2)
     # @test np.allclose((data - data[..., :1]) / 3600, forecast_period)
 end

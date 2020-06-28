@@ -165,10 +165,6 @@ function first(index::FileIndex)
         #  package, in Julia seek seeks through the messages themselves not
         #  the acutal offset values. Here we use the cumulative sum of the
         #  message lengths to work out which message an offset value is in.
-        #
-        #  TODO: This is probably due to me making a mistake, don't know
-        #  enough about GRIB spec to figure out how this should be done, get
-        #  ECMWF help with this
         message_length_cumsum = cumsum(index.message_lengths)
         offset_message_index = findfirst(message_length_cumsum .> first_offset) - 1
         seek(file, offset_message_index)

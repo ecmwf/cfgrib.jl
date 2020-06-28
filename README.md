@@ -76,6 +76,7 @@ using CfGRIB
     - [ ] integration into FileIO
       - [x] integration set up
       - [ ] PR to add format to FileIO
-    - filter_by_index
+    - filter_by_keys functionality + tests
     - index file generation and loading
     - make code more idiomatic to julia
+    - [ ] logging

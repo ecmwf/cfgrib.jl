@@ -1,5 +1,3 @@
-#  TODO: Change constants to tuples to prevent accidentally mutating the values?
-
 const GLOBAL_ATTRIBUTES_KEYS = [
     "edition", "centre",
     "centreDescription", "subCentre"
