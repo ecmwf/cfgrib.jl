@@ -116,3 +116,39 @@ not me :P could I get some help with tracking down this issue?
 
 - How can I pull out the version of eccodes? It's stored in the `history` but I
   don't know hot to get it.
+
+
+# Meeting Notes
+
+- make grib.jl issue about segfaults and @ steffen
+
+- wrong increment loading behaviour
+  - calculate increment and dimensions from the first bits of information
+  - grib devided into sections, section describes grid geometry information
+  - other section contains the data
+  - array of values can be out of sync with the grid geometry
+
+- logging only for debugging
+  - warn, error, critical, level logging in julia
+
+- offsets
+  - each message is self contained
+  - message number (count key) starts from 1
+  - offset is a long integer which is the BYTE OFFSET OF THE MESSAGE IN THE FILE
+  - seeking to the byte offset puts you at the beginning of the message
+
+- use readme file as tests for filter by keys
+
+- history shouldn't matter much, just leave it as a list of processing steps
+
+- OnDiskArray leave as float32
+
+- cfmessage conversion methods
+  - these methods to have some tests:
+  - to_grib_date_time, from_grib_step, to_grib_step
+
+- look for the eccodes c-engine on github to see the version
+  - eccodes-python python bindings have the way to get the versions
+  - request GRIB.jl to add a versions method in
+
+- ask GRIB.jl author about adding in tests
