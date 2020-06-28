@@ -260,6 +260,7 @@ test_files = [
     # "era5-levels-corrupted.grib",# - skip corrupted file tests
     "era5-levels-members.grib",
     "fields_with_missing_values.grib",
+    "forecast_monthly_ukmo.grib",
     # "hpa_and_pa.grib",# - DatasetBuildError("multiple values for unique key, try re-open the file with one of
     "lambert_grid.grib",
     "multi_param_on_multi_dims.grib",
@@ -321,11 +322,15 @@ python_type_mapping = Dict(
             elseif var_d_type_py <: Array
                 #  Too much effort to try and figure out which dimension(s) have
                 #  been transposed due to the row/col differences between julia
-                #  and python, easier to just test if either case works
-                if var_jl.data ≈ var_py.data
-                    @test true
-                elseif adjoint(var_jl.data) ≈ var_py.data
-                    @test true
+                #  and python, easier to just test if any case works
+                if size(var_jl.data) == size(var_py.data)
+                    if var_jl.data ≈ var_py.data
+                        @test true
+                    else
+                        @test adjoint(var_jl.data) ≈ var_py.data
+                    end
+                elseif size(adjoint(var_jl.data)) == size(var_py.data)
+                    @test adjoint(var_jl.data) ≈ var_py.data
                 else
                     #  Values not equal for adjoint or direct comparison
                     @test false
