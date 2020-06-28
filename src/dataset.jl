@@ -60,10 +60,10 @@ function Base.convert(::Type{T}, A::OnDiskArray) where T <: Array
     return T(res)
 end
 
-#  TODO: Use propper `to_indices`, add boundscheck
+#  TODO: Use proper `to_indices`, add boundscheck
 function Base.getindex(obj::OnDiskArray, key...)
     expanded_keys = expand_key(key, size(obj))
-    #  Geograpyh dims (e.g. lat, lon) are on the end and need to be loaded fully
+    #  Geography dims (e.g. lat, lon) are on the end and need to be loaded fully
     #  so only look at the other dimensions
     header_items = expanded_keys[1:end-obj.geo_ndim]
     array_field_shape = (
@@ -259,7 +259,7 @@ function encode_cf_first(
     )
 
     #  NOTE: marking value as `const` just means it cannot be reassigned, the
-    #  value can still be mutated/appended to, so be carfeul `append!`ing to
+    #  value can still be mutated/appended to, so be careful `append!`ing to
     #  the constants
     coords_map = deepcopy(CfGRIB.ENSEMBLE_KEYS)
     param_id = get(data_var_attrs, "GRIB_paramId", missing)

@@ -8,7 +8,7 @@ export FileIndex
 """
     FileIndex
 
-A mutable store for indecies of a GRIB file
+A mutable store for indices of a GRIB file
 
 # Constructors
 ```julia
@@ -163,7 +163,7 @@ function first(index::FileIndex)
         #  There is a discrepancy between how offsets are defined and used
         #  in cfgrib with the GRIB file seek method and in the Julia GRIB
         #  package, in Julia seek seeks through the messages themselves not
-        #  the acutal offset values. Here we use the cumulative sum of the
+        #  the actual offset values. Here we use the cumulative sum of the
         #  message lengths to work out which message an offset value is in.
         message_length_cumsum = cumsum(index.message_lengths)
         offset_message_index = findfirst(message_length_cumsum .> first_offset) - 1
@@ -191,7 +191,7 @@ function filter_offsets(index::FileIndex; query...)
     return filtered_offsets
 end
 
-function filter(index::FileIndex; query...)
+function filter(index::FileIndex; query...)::FileIndex
     filtered_offsets = filter_offsets(index; query...)
 
     filtered_index = deepcopy(index)
