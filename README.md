@@ -52,31 +52,3 @@ Finally exit pkg mode by pressing backspace, and use the package as usual:
 ```julia
 using CfGRIB
 ```
-
-## TODO
-
-- Documentation:
-  - add badges for:
-    - stable docs
-    - latest docs
-    - documentation build status
-  - for auto-generation:
-    - additional docstrings where required
-    - set up doc build and deploy through CI
-  - write up manual pages
-    - examples
-    - additional context around docstrings
-  - find way to sync doc readme to github page readme
-- Package:
-  - see random todo's scattered through code
-  - major:
-    - [x] xarray-like backend
-      - [x] AxisArrays
-      - [x] DimensionalData
-    - [ ] integration into FileIO
-      - [x] integration set up
-      - [ ] PR to add format to FileIO
-    - filter_by_keys functionality + tests
-    - index file generation and loading
-    - make code more idiomatic to julia
-    - [ ] logging

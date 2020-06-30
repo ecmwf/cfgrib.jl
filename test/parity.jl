@@ -264,7 +264,7 @@ test_files = [
     # "hpa_and_pa.grib",# - DatasetBuildError("multiple values for unique key, try re-open the file with one of
     "lambert_grid.grib",
     "multi_param_on_multi_dims.grib",
-    # "reduced_gg.grib", - TODO: investigate segfault in GRIB.jl
+    # "reduced_gg.grib", - TODO: enable test with next release of Julia
     "regular_gg_ml.grib",
     "regular_gg_ml_g2.grib",
     "regular_gg_pl.grib",
