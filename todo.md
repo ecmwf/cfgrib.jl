@@ -2,13 +2,15 @@
 
 List of tasks, roughly in order of completion and priority:
 
+
 ## Done
 
 - [x] updating with additional tests/features from cfgrib.py
   - new test file: `forecast_monthly_ukmo`
   - addition of `date_key="indexingDate"` and `time_key="indexingTime"`
 
-- [x] added `CompatHelper` for automated dependency updates (similar to Dependabot)
+- [x] added `CompatHelper` for automated dependency updates (similar to
+  Dependabot)
 
 - [x] segfaults in GRIB.jl
   - @Robert to open an issue on GRIB.jl on GitHub and mention Stephan, so that
