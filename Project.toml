@@ -6,7 +6,6 @@ version = "0.1.0"
 [deps]
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
-Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 GRIB = "b16dfd50-4035-11e9-28d4-9dfe17e6779b"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
@@ -21,12 +20,13 @@ FileIO = "1.3.0"
 GRIB = "0.1, 0.2"
 JSON = "0.21.0"
 PyCall = "1.91.0"
-julia = "1.2"
+julia = "1.3"
 
 [extras]
 AxisArrays = "39de3d68-74b9-583c-8d2d-e117c070f3a9"
 Conda = "8f4d0f93-b110-5947-807f-2305c1781a2d"
 DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 InteractiveUtils = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 PyCall = "438e738f-606a-5dbb-bf0a-cddfbfd45ab0"
 REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
@@ -35,7 +35,10 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 [targets]
 test = [
     "Test",
-    "Conda", "PyCall",
-    "AxisArrays", "DimensionalData",
-    "InteractiveUtils", "REPL"
+    "Conda",
+    "PyCall",
+    "AxisArrays",
+    "DimensionalData",
+    "InteractiveUtils",
+    "REPL"
 ]
