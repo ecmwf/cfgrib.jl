@@ -1,4 +1,7 @@
+module Backends
+
 using FileIO
+using Requires
 using CfGRIB
 
 #  Goal is for the backends to be optional, so only include the files if the
@@ -7,41 +10,27 @@ BACKEND_PROVIDERS = [:AxisArrays, :DimensionalData]
 AVAILABLE_BACKENDS = []
 DEFAULT_BACKEND = DataSet
 
-try
-    using DimensionalData
-    include("./backends/dimensionaldata.jl")
-    global DEFAULT_BACKEND = DimensionalArrayWrapper
-    append!(AVAILABLE_BACKENDS, [:DimensionalArray])
-catch e
-    if !(e isa ArgumentError)
-        throw(e)
+function __init__()
+    @require AxisArrays = "39de3d68-74b9-583c-8d2d-e117c070f3a9" begin
+        include("./backends/dimensionaldata.jl")
+        println("Weee")
+        global DEFAULT_BACKEND = AxisArrayWrapper
+        append!(AVAILABLE_BACKENDS, [:AxisArray])
+    end
+
+    @require DimensionalData="0703355e-b756-11e9-17c0-8b28908087d0" begin
+        include("./backends/axisarrays.jl")
+        println("Weee")
+        global DEFAULT_BACKEND = DimensionalArrayWrapper
+        append!(AVAILABLE_BACKENDS, [:DimensionalArray])
+    end
+
+    if DEFAULT_BACKEND == DataSet
+        @warn """No backends could be loaded, setting default to bare `DataSet`.
+        Please include one of: $BACKEND_PROVIDERS.
+        Run `import Pkg; Pkg.add("BACKEND")` to install one of the array backends"""
     end
 end
-
-try
-    using AxisArrays
-    include("./backends/axisarrays.jl")
-    global DEFAULT_BACKEND = AxisArrayWrapper
-    append!(AVAILABLE_BACKENDS, [:AxisArray])
-catch e
-    if !(e isa ArgumentError)
-        throw(e)
-    end
-end#
-
-#  If no backends could be loaded print a warning
-if DEFAULT_BACKEND == DataSet
-    @warn """No backends could be loaded, setting default to bare `DataSet`.
-    Please include one of: $BACKEND_PROVIDERS.
-    Run `import Pkg; Pkg.add("BACKEND")` to install one of the array backends"""
-end
-
-
-# function load(f::String; backend=DEFAULT_BACKEND, kwargs...)
-#     ds = DataSet(f, kwargs...)
-
-#     return convert(backend, ds)
-# end
 
 function fileio_load(f::File{format"GRIB"}; backend=DEFAULT_BACKEND, kwargs...)
     """ Load command for FileIO integration. Following line must be in the
@@ -52,3 +41,5 @@ function fileio_load(f::File{format"GRIB"}; backend=DEFAULT_BACKEND, kwargs...)
     ds = DataSet(f.filename, kwargs...)
     return convert(backend, ds)
 end
+
+end # module
