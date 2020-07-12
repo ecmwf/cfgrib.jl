@@ -1,7 +1,26 @@
+import REPL
+
+# Very hacky way to get the pretty show output as a sting so that it can be
+# included in the docstrings automatically. This can definitely be done better
+# but I haven't looked it up much.
+function _pretty_show_str_(var)
+    capturedout=IOBuffer()
+    term = REPL.Terminals.TTYTerminal("dumb", stdin, capturedout, capturedout)
+    mime = MIME{Symbol("text/plain")}()
+    show(term, mime, var)
+    out = String(take!(capturedout))
+    out = replace(out, "_"=>"\\_")
+    out = split(out)
+    return out
+end
+
 const GLOBAL_ATTRIBUTES_KEYS = [
     "edition", "centre",
     "centreDescription", "subCentre"
 ]
+@doc """
+$(_pretty_show_str_(GLOBAL_ATTRIBUTES_KEYS))
+""" GLOBAL_ATTRIBUTES_KEYS
 
 const DATA_ATTRIBUTES_KEYS = [
     "paramId",
@@ -23,6 +42,9 @@ const DATA_ATTRIBUTES_KEYS = [
     "gridType",
     "gridDefinitionDescription",
 ]
+@doc """
+$(_pretty_show_str_(DATA_ATTRIBUTES_KEYS))
+""" DATA_ATTRIBUTES_KEYS
 
 const GRID_TYPE_MAP = Dict(
     "regular_ll" => [
@@ -107,17 +129,44 @@ const GRID_TYPE_MAP = Dict(
     "reduced_gg" => ["N", "pl"],
     "sh" => ["M", "K", "J"],
 )
+@doc """
+$(_pretty_show_str_(GRID_TYPE_MAP))
+""" GRID_TYPE_MAP
+
 const GRID_TYPE_KEYS = unique(vcat(values(GRID_TYPE_MAP)...))
+@doc """
+$(_pretty_show_str_(GRID_TYPE_KEYS))
+""" GRID_TYPE_KEYS
 
 const ENSEMBLE_KEYS = ["number"]
+@doc """
+$(_pretty_show_str_(ENSEMBLE_KEYS))
+""" ENSEMBLE_KEYS
+
 const VERTICAL_KEYS = ["level"]
+@doc """
+$(_pretty_show_str_(VERTICAL_KEYS))
+""" VERTICAL_KEYS
+
 const DATA_TIME_KEYS = ["dataDate", "dataTime", "endStep"]
+@doc """
+$(_pretty_show_str_(DATA_TIME_KEYS))
+""" DATA_TIME_KEYS
+
 const ALL_REF_TIME_KEYS = [
     "time", "step",
     "valid_time", "verifying_time", "indexing_time",
     "forecastMonth"
 ]
+@doc """
+$(_pretty_show_str_(ALL_REF_TIME_KEYS))
+""" ALL_REF_TIME_KEYS
+
 const SPECTRA_KEYS = ["directionNumber", "frequencyNumber"]
+@doc """
+$(_pretty_show_str_(SPECTRA_KEYS))
+""" SPECTRA_KEYS
+
 
 const ALL_HEADER_DIMS = vcat(
     ENSEMBLE_KEYS,
@@ -126,12 +175,19 @@ const ALL_HEADER_DIMS = vcat(
     ALL_REF_TIME_KEYS,
     SPECTRA_KEYS
 )
+@doc """
+$(_pretty_show_str_(ALL_HEADER_DIMS))
+""" ALL_HEADER_DIMS
 
 #  TODO: Include the list of included keys in docs automatically
 const ALL_KEYS = sort(unique(vcat(
     GLOBAL_ATTRIBUTES_KEYS, DATA_ATTRIBUTES_KEYS,
     GRID_TYPE_KEYS, ALL_HEADER_DIMS
 )))
+@doc """
+$(_pretty_show_str_(ALL_KEYS))
+""" ALL_KEYS
+
 
 #  TODO: Include the list of coordinate attributes in docs automatically
 const COORD_ATTRS = Dict(
@@ -228,8 +284,15 @@ const COORD_ATTRS = Dict(
         "long_name"        => "time",
     ),
 )
+@doc """
+$(_pretty_show_str_(COORD_ATTRS))
+""" COORD_ATTRS
 
 const GRID_TYPES_DIMENSION_COORDS = ["regular_ll", "regular_gg"]
+@doc """
+$(_pretty_show_str_(GRID_TYPES_DIMENSION_COORDS))
+""" GRID_TYPES_DIMENSION_COORDS
+
 const GRID_TYPES_2D_NON_DIMENSION_COORDS = [
     "rotated_ll",
     "rotated_gg",
@@ -237,3 +300,7 @@ const GRID_TYPES_2D_NON_DIMENSION_COORDS = [
     "albers",
     "polar_stereographic",
 ]
+@doc """
+$(_pretty_show_str_(GRID_TYPES_2D_NON_DIMENSION_COORDS))
+""" GRID_TYPES_2D_NON_DIMENSION_COORDS
+
