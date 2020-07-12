@@ -1,23 +1,26 @@
-using Pkg;
-Pkg.activate(joinpath(@__DIR__, "..")); Pkg.instantiate()
-Pkg.activate(); Pkg.instantiate()
+using Pkg
 
 pushfirst!(LOAD_PATH, joinpath(@__DIR__, ".."))
+
+Pkg.activate(joinpath(@__DIR__))
+# Pkg.instantiate()
+# Pkg.activate(); Pkg.instantiate()
 
 using Documenter, CfGRIB
 
 makedocs(
-    # format = Documenter.HTML(
-    #     edit_link = :commit
-    # ),
     modules = [CfGRIB],
+    clean = false,
     sitename="CfGRIB.jl",
+    doctest = false,
     pages = [
-        "Home" => "index.md",
-        "Library" => "library.md",
-    ],
-    authors = replace(
-        join(Pkg.TOML.parsefile("../Project.toml")["authors"], ", "),
-        r" <.*?>" => ""
-    )
+        "Home"    => "index.md",
+        "Library" => Any[
+            "Backends"  => "lib/backends.md",
+            "CFMessage" => "lib/cfmessage.md",
+            "Constants" => "lib/constants.md",
+            "Dataset"   => "lib/dataset.md",
+            "Indexing"  => "lib/indexing.md",
+        ],
+    ]
 )
