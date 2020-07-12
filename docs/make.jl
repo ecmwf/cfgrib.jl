@@ -24,3 +24,8 @@ makedocs(
         ],
     ]
 )
+
+deploydocs(
+    repo = "github.com/RobertRoscar/CfGRIB.jl.git",
+    push_preview=true,
+)
