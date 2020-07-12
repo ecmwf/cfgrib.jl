@@ -20,9 +20,27 @@ GRIB_STEP_UNITS_TO_SECONDS = [
     1,
     900,
 ]
+@doc """
+    $GRIB_STEP_UNITS_TO_SECONDS
+
+Array used to convert the grib step units to seconds. As Julia is 1-indexed, not
+0 like Python, you should take care to correctly access the array (typically
++1 to the step units).
+""" GRIB_STEP_UNITS_TO_SECONDS
+
 DEFAULT_EPOCH = DateTime(1970, 1, 1, 0, 0)
+@doc """
+    DateTime(1970, 1, 1, 0, 0)
+
+Default epoch used for `from_` and `to_` methods, set to 1st of January 1970.
+""" DEFAULT_EPOCH
 
 
+"""
+    from_grib_date_time(date::Int, time::Int; epoch=DEFAULT_EPOCH)
+
+Returns the integer seconds from epoch to the given date and time.
+"""
 function from_grib_date_time(date::Int, time::Int; epoch=DEFAULT_EPOCH)
     hour = time ÷ 100
     minute = time % 100
@@ -35,6 +53,15 @@ function from_grib_date_time(date::Int, time::Int; epoch=DEFAULT_EPOCH)
     return Dates.value(Dates.Second(data_datetime - epoch))
 end
 
+"""
+    from_grib_date_time(
+            message::GRIB.Message; date_key="dataDate",
+            time_key="dataTime", epoch=DEFAULT_EPOCH
+    )
+
+Pulls out the date and time from given keys and passes them to
+[`from_grib_date_time(::Int, ::Int)`](@ref)
+"""
 function from_grib_date_time(
         message::GRIB.Message; date_key="dataDate",
         time_key="dataTime", epoch=DEFAULT_EPOCH
@@ -53,12 +80,23 @@ function to_grib_date_time(args...; kwargs...)
     throw(ErrorException("Unimplemented"))
 end
 
+"""
+    from_grib_step(
+            message::GRIB.Message,
+            step_key="endStep", step_unit_key="stepUnits"
+    )
 
+Returns the `step_key` value in hours.
+
+Uses [`GRIB_STEP_UNITS_TO_SECONDS`](@ref) to convert the step values to seconds,
+then divides by `3600.0` to get hours.
+"""
 function from_grib_step(
         message::GRIB.Message,
         step_key="endStep", step_unit_key="stepUnits"
     )
-    to_seconds = GRIB_STEP_UNITS_TO_SECONDS[message[step_unit_key]]
+    #  +1 as Julia is 1-indexed not 0
+    to_seconds = GRIB_STEP_UNITS_TO_SECONDS[message[step_unit_key]+1]
     return message[step_key] * to_seconds / 3600.0
 end
 
@@ -66,7 +104,16 @@ function to_grib_step(args...; kwargs...)
     throw(ErrorException("Unimplemented"))
 end
 
+"""
+    from_grib_month(
+        message::GRIB.Message,
+        verifying_month_key="verifyingMonth",
+        epoch=DEFAULT_EPOCH
+    )
 
+Returns the integer seconds from the epoch to the verifying month value in the
+GRIB message.
+"""
 function from_grib_month(
         message::GRIB.Message,
         verifying_month_key="verifyingMonth",
@@ -106,7 +153,10 @@ function build_valid_time(time::Int, step::Int)::Tuple{Tuple{},Int64}
 end
 
 """
-    build_valid_time(time::Array{Int, 1}, step::Int)::Tuple{Tuple{String},Array{Int64,1}}
+    build_valid_time(
+        time::Array{Int, 1},
+        step::Int
+    )::Tuple{Tuple{String},Array{Int64,1}}
 
 Returns a pair of `(dims, data)` based on the type of input, this function
 behaves like:
@@ -126,7 +176,10 @@ function build_valid_time(time::Array{Int, 1}, step::Int)::Tuple{Tuple{String},A
 end
 
 """
-    build_valid_time(time::Int, step::Array{Int, 1})::Tuple{Tuple{String},Array{Int64,1}}
+    build_valid_time(
+        time::Int,
+        step::Array{Int, 1}
+    )::Tuple{Tuple{String},Array{Int64,1}}
 
 Returns a pair of `(dims, data)` based on the type of input, this function
 behaves like:
@@ -146,7 +199,10 @@ function build_valid_time(time::Int, step::Array{Int, 1})::Tuple{Tuple{String},A
 end
 
 """
-    build_valid_time(time::Array{Int, 1}, step::Array{Int, 1})::Tuple{Tuple{},Int64}
+    build_valid_time(
+        time::Array{Int, 1},
+        step::Array{Int, 1}
+    )::Tuple{Tuple{},Int64}
 
 Returns a pair of `(dims, data)` based on the type of input, this function
 behaves like:
@@ -227,10 +283,8 @@ julia> CfGRIB.COMPUTED_KEYS["time"](20160501, 0)
     read_message(message::GRIB.Message, key::String)
 
 Reads a specific key from a GRIB.jl message. Attempts to convert the raw value
-associated with that key using the `COMPUTED_KEYS` mapping to `from_grib_*`
-functions.
-
-See also: [`compute_keys`](@ref)
+associated with that key using the [`COMPUTED_KEYS`](@ref) mapping to
+`from_grib_*` functions.
 """
 function read_message(message::GRIB.Message, key::String)
     value = missing
