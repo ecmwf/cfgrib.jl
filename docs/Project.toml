@@ -1,0 +1,9 @@
+[deps]
+AxisArrays = "39de3d68-74b9-583c-8d2d-e117c070f3a9"
+CfGRIB = "b476ad61-2aff-463c-b862-1d4433a0d503"
+DimensionalData = "0703355e-b756-11e9-17c0-8b28908087d0"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+DocumenterTools = "35a29f4d-8980-5a13-9543-d66fff28ecb8"
+
+[compat]
+Documenter = "0.24"
