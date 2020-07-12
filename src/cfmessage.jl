@@ -133,7 +133,9 @@ function from_grib_month(
 end
 
 """
-    build_valid_time(time::Int, step::Int)::Tuple{Tuple{},Int64}
+    build_valid_time(
+        time::Int, step::Int
+    )::Tuple{Tuple{},Int64}
 
 Returns a pair of `(dims, data)` based on the type of input, this function
 behaves like:
@@ -143,7 +145,9 @@ julia> CfGRIB.build_valid_time(10, 10)
 ((), 36010)
 ```
 """
-function build_valid_time(time::Int, step::Int)::Tuple{Tuple{},Int64}
+function build_valid_time(
+    time::Int, step::Int
+)::Tuple{Tuple{},Int64}
     step_s = step * 3600
 
     data = time + step_s
@@ -154,8 +158,7 @@ end
 
 """
     build_valid_time(
-        time::Array{Int, 1},
-        step::Int
+        time::Array{Int, 1}, step::Int
     )::Tuple{Tuple{String},Array{Int64,1}}
 
 Returns a pair of `(dims, data)` based on the type of input, this function
@@ -166,7 +169,9 @@ julia> CfGRIB.build_valid_time([10], 10)
 (("time",), [36010])
 ```
 """
-function build_valid_time(time::Array{Int, 1}, step::Int)::Tuple{Tuple{String},Array{Int64,1}}
+function build_valid_time(
+    time::Array{Int, 1}, step::Int
+)::Tuple{Tuple{String},Array{Int64,1}}
     step_s = step * 3600
 
     data = time .+ step_s
@@ -177,8 +182,7 @@ end
 
 """
     build_valid_time(
-        time::Int,
-        step::Array{Int, 1}
+        time::Int, step::Array{Int, 1}
     )::Tuple{Tuple{String},Array{Int64,1}}
 
 Returns a pair of `(dims, data)` based on the type of input, this function
@@ -189,7 +193,9 @@ julia> CfGRIB.build_valid_time(1, [10])
 (("step",), [36001])
 ```
 """
-function build_valid_time(time::Int, step::Array{Int, 1})::Tuple{Tuple{String},Array{Int64,1}}
+function build_valid_time(
+    time::Int, step::Array{Int, 1}
+)::Tuple{Tuple{String},Array{Int64,1}}
     step_s = step * 3600
 
     data = time .+ step_s
@@ -200,19 +206,33 @@ end
 
 """
     build_valid_time(
-        time::Array{Int, 1},
-        step::Array{Int, 1}
-    )::Tuple{Tuple{},Int64}
-
+        time::Array{Int, 1}, step::Array{Int, 1}
+    )::Union{
+        Tuple{Tuple{},Int64},
+        Tuple{Tuple{String,String},Array{Int64,2}}
+    }
 Returns a pair of `(dims, data)` based on the type of input, this function
 behaves like:
+
+```jldoctest
+julia> CfGRIB.build_valid_time([10, 10], [10, 10])
+(("time", "step"), [36010 36010; 36010 36010])
+```
+
+However if it receives two arrays of one element then it  dispatches to
+`build_valid_time(time::Int, step::Int)`:
 
 ```jldoctest
 julia> CfGRIB.build_valid_time([10], [10])
 ((), 36010)
 ```
 """
-function build_valid_time(time::Array{Int, 1}, step::Array{Int, 1})::Tuple{Tuple{},Int64}
+function build_valid_time(
+    time::Array{Int, 1}, step::Array{Int, 1}
+)::Union{
+    Tuple{Tuple{},Int64},
+    Tuple{Tuple{String,String},Array{Int64,2}}
+}
     step_s = step * 3600
 
     if length(time) == 1 && length(step) == 1
