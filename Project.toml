@@ -9,6 +9,7 @@ Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 FileIO = "5789e2e9-d7fb-5bc7-8068-2c6fae9b9549"
 GRIB = "b16dfd50-4035-11e9-28d4-9dfe17e6779b"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 
 [compat]
 AxisArrays = "v0.4.0"
@@ -33,12 +34,4 @@ REPL = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = [
-    "Test",
-    "Conda",
-    "PyCall",
-    "AxisArrays",
-    "DimensionalData",
-    "InteractiveUtils",
-    "REPL"
-]
+test = ["Test", "Conda", "PyCall", "AxisArrays", "DimensionalData", "InteractiveUtils"]
