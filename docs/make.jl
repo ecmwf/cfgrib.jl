@@ -26,6 +26,7 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/RobertRoscar/CfGRIB.jl.git",
+    repo = "github.com/RobertRosca/CfGRIB.jl.git",
+    devbranch="dev-docs",
     push_preview=true,
 )
