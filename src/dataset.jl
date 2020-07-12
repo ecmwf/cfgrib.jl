@@ -284,8 +284,9 @@ function encode_cf_first(
         if issubset(time_dims, CfGRIB.ALL_REF_TIME_KEYS)
             append!(coords_map, time_dims)
         else
-            throw("time_dims $(time_dims) is not a subset of " *
-                  "$(CfGRIB.ALL_REF_TIME_KEYS)"
+            throw(
+                "time_dims $(time_dims) is not a subset of " *
+                "$(CfGRIB.ALL_REF_TIME_KEYS)"
             )
         end
     else
@@ -323,7 +324,7 @@ function build_variable_components(
         values = index[coord_key]
         if length(values) == 1 && ismissing(values[1])
             #  TODO: Add logging
-             @warn "Missing from GRIB Stream $(coord_key)"
+            @warn "Missing from GRIB Stream $(coord_key)"
             continue
         end
 
