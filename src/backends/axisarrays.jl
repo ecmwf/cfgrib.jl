@@ -4,11 +4,31 @@ using AxisArrays
 import Base: getindex, keys, convert, show, IO, MIME
 
 
-struct AxisArrayWrapper
+"""
+AxisArrays provides the equivalent of an xarray `DataArray`, this wrapper
+adds the functionality of an xarray `DataSet` by containing multiple
+`AxisArray`s.
+
+Object should be created by calling the relevant
+`convert($(FUNCTIONNAME), dataset::DataSet)` method on a [`DataSet`](@ref DataSet).
+
+# See also
+
+[`Backend`](@ref Backend), [`ArrayWrapper`](@ref ArrayWrapper)
+"""
+struct AxisArrayWrapper <: ArrayWrapper
+    "Dictionary of `DimensionName::String => DimensionLength::Int`"
     dimensions::OrderedDict
+    "Named tuple of `DatasetName::Symbol => Dataset::AxisArray`"
     datasets::T where T <: NamedTuple
+    "Dictionary of `AttributeName::String => AttributeValue::Any`"
     attributes::OrderedDict
+    "Dictionary containing encoding information (usually `source`, `filter_by_keys`, and `ecode_cf`)"
     encoding::Dict
+
+    #  Manually define inner constructor here so that it does not appear twice
+    #  in the docs
+    AxisArrayWrapper(dimensions, datasets, attributes, encoding) = new(dimensions, datasets, attributes, encoding)
 end
 
 getindex(obj::AxisArrayWrapper, key) = getfield(obj, :datasets)[key]
@@ -23,7 +43,7 @@ function Base.getproperty(obj::AxisArrayWrapper, key::Symbol)
     end
 end
 
-function convert(::Type{AxisArrayWrapper}, dataset::DataSet)
+function convert(::Type{AxisArrayWrapper}, dataset::DataSet)::AxisArrayWrapper
     dimensions = dataset.dimensions
     attributes = dataset.attributes
     encoding = dataset.encoding
@@ -46,7 +66,7 @@ function convert(::Type{AxisArrayWrapper}, dataset::DataSet)
     return AxisArrayWrapper(dimensions, datasets, attributes, encoding)
 end
 
-convert(::Type{AxisArray}, dataset::DataSet) = convert(AxisArrayWrapper, dataset)
+convert(::Type{AxisArray}, dataset::DataSet)::AxisArrayWrapper = convert(AxisArrayWrapper, dataset)
 
 function Base.show(io::IO, mime::MIME"text/plain", da::AxisArrayWrapper)
     dimensions_list = join(["$k: $v" for (k,v) in pairs(da.dimensions)], ", ")

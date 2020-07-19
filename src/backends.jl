@@ -1,11 +1,40 @@
 using FileIO
 using CfGRIB
 
+
 #  Goal is for the backends to be optional, so only include the files if the
 #  user has the required backend installed
 BACKEND_PROVIDERS = [:AxisArrays, :DimensionalData]
 AVAILABLE_BACKENDS = []
 DEFAULT_BACKEND = DataSet
+
+"""
+Backends are wrappers around named array data types, contain information on the
+dimensions, attributes, and encoding of the data, as well as the datasets
+themselves.
+
+# See also
+
+[`AxisArrayWrapper`](@ref AxisArrayWrapper),
+[`DimensionalArrayWrapper`](@ref DimensionalArrayWrapper)
+"""
+abstract type Backend end
+
+"""
+Abstract type for backends which also wrap data types provided by external
+packages, instead of just providing a 'vanilla' implementation of the data type.
+
+Python's `xarray` has two fundamental data structures, a `DataArray` which holds
+the data for a **single** multi-dimensional variable and its coordinates, as
+well as a `Dataset` which holds **multiple DataArrays** that (typically) share
+the same coordinates.
+
+# See also
+
+[`AxisArrayWrapper`](@ref AxisArrayWrapper),
+[`DimensionalArrayWrapper`](@ref DimensionalArrayWrapper)
+"""
+abstract type ArrayWrapper <: Backend end
 
 try
     using DimensionalData
