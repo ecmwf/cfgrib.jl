@@ -6,35 +6,27 @@ export FileIndex
 
 
 """
-    FileIndex
-
 A mutable store for indices of a GRIB file
-
-# Constructors
-```julia
-FileIndex(grib_path::String, index_keys::Array{String, 1})
-```
-
-# Fields
- - `allowed_protocol_version::VersionNumber` : Version number used when saving/hashing index files
- - `grib_path::String` : Path to the file the index belongs to
- - `index_path::String` : Path to the index cache file
- - `index_keys::Array{String, 1}` :
- - `offsets::Array` :
- - `header_values::OrderedDict{String, Array}` :
- - `filter_by_keys::Dict` :
 """
 mutable struct FileIndex
+    "Version number used when saving/hashing index files, should change if the indexing structure changes breaking backwards-compatibility"
     allowed_protocol_version::VersionNumber
 
+    "Path to the file the index belongs to"
     grib_path::String
+    "Path to the index cache file"
     index_path::String
 
+    "Array containing all of the index keys"
     index_keys::Array{String, 1}
-    offsets::Array  # TODO: Specify offset type better
+    "Array containing pairs of `offsets[HeaderTuple(header_values)] => offset_field`"
+    offsets::Array{Pair{T where T <: NamedTuple, Int},1}
+    "Array containing the length of each message in the GRIB file"
     message_lengths::Array{Int, 1}
+    "Dictionary of all of the loaded header values in the GRIB file"
     header_values::OrderedDict{String, Array}
 
+    "Filters used when creating the file index"
     filter_by_keys::Dict
 
     FileIndex() = new(v"0.0.0")
@@ -80,7 +72,7 @@ end
 
 
 function from_gribfile!(index::FileIndex)
-    offsets = OrderedDict()
+    offsets = OrderedDict{T where T <: NamedTuple, Int}()
     count_offsets = Dict{Int, Int}()
 
     index_keys = index.index_keys

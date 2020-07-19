@@ -2,8 +2,16 @@ using Dates
 using GRIB
 
 
-# taken from eccodes stepUnits.table
-GRIB_STEP_UNITS_TO_SECONDS = [
+"""
+    $(typeof(GRIB_STEP_UNITS_TO_SECONDS))
+
+Array used to convert the grib step units to seconds. As Julia is 1-indexed,
+not 0 like Python, you should take care to correctly access the array,
+typically  just +1 to the step units before using it as an index.
+
+Taken from eccodes `stepUnits.table`.
+"""
+const GRIB_STEP_UNITS_TO_SECONDS = [
     60,
     3600,
     86400,
@@ -20,28 +28,27 @@ GRIB_STEP_UNITS_TO_SECONDS = [
     1,
     900,
 ]
-@doc """
-    $GRIB_STEP_UNITS_TO_SECONDS
-
-Array used to convert the grib step units to seconds. As Julia is 1-indexed, not
-0 like Python, you should take care to correctly access the array (typically
-+1 to the step units).
-""" GRIB_STEP_UNITS_TO_SECONDS
-
-DEFAULT_EPOCH = DateTime(1970, 1, 1, 0, 0)
-@doc """
-    DateTime(1970, 1, 1, 0, 0)
-
-Default epoch used for `from_` and `to_` methods, set to 1st of January 1970.
-""" DEFAULT_EPOCH
-
 
 """
-    from_grib_date_time(date::Int, time::Int; epoch=DEFAULT_EPOCH)
+    $(typeof(DEFAULT_EPOCH))
 
+Default epoch used for `from_` and `to_` methods, set to `$DEFAULT_EPOCH.`
+"""
+const DEFAULT_EPOCH = DateTime(1970, 1, 1, 0, 0)
+
+"""
 Returns the integer seconds from epoch to the given date and time.
+
+$(METHODLIST)
 """
-function from_grib_date_time(date::Int, time::Int; epoch=DEFAULT_EPOCH)
+function from_grib_date_time end
+
+""
+function from_grib_date_time(
+    date::Int,
+    time::Int;
+    epoch::DateTime=DEFAULT_EPOCH
+)::Int
     hour = time ÷ 100
     minute = time % 100
     year = date ÷ 10000
@@ -54,18 +61,15 @@ function from_grib_date_time(date::Int, time::Int; epoch=DEFAULT_EPOCH)
 end
 
 """
-    from_grib_date_time(
-            message::GRIB.Message; date_key="dataDate",
-            time_key="dataTime", epoch=DEFAULT_EPOCH
-    )
-
 Pulls out the date and time from given keys and passes them to
-[`from_grib_date_time(::Int, ::Int)`](@ref)
+[`from_grib_date_time(::Int, ::Int)`](@ref from_grib_date_time(::Int, ::Int))
 """
 function from_grib_date_time(
-        message::GRIB.Message; date_key="dataDate",
-        time_key="dataTime", epoch=DEFAULT_EPOCH
-    )
+    message::GRIB.Message;
+    date_key="dataDate",
+    time_key="dataTime",
+    epoch::DateTime=DEFAULT_EPOCH
+)::Union{Int,Missing}
     if !haskey(message, date_key) || !haskey(message, time_key)
         return missing
     end
@@ -81,20 +85,16 @@ function to_grib_date_time(args...; kwargs...)
 end
 
 """
-    from_grib_step(
-            message::GRIB.Message,
-            step_key="endStep", step_unit_key="stepUnits"
-    )
-
 Returns the `step_key` value in hours.
 
-Uses [`GRIB_STEP_UNITS_TO_SECONDS`](@ref) to convert the step values to seconds,
-then divides by `3600.0` to get hours.
+Uses [`GRIB_STEP_UNITS_TO_SECONDS`](@ref GRIB_STEP_UNITS_TO_SECONDS) to convert
+the step values to seconds, then divides by `3600.0` to get hours.
 """
 function from_grib_step(
-        message::GRIB.Message,
-        step_key="endStep", step_unit_key="stepUnits"
-    )
+    message::GRIB.Message,
+    step_key::String="endStep",
+    step_unit_key::String="stepUnits"
+)::Float64
     #  +1 as Julia is 1-indexed not 0
     to_seconds = GRIB_STEP_UNITS_TO_SECONDS[message[step_unit_key]+1]
     return message[step_key] * to_seconds / 3600.0
@@ -105,21 +105,14 @@ function to_grib_step(args...; kwargs...)
 end
 
 """
-    from_grib_month(
-        message::GRIB.Message,
-        verifying_month_key="verifyingMonth",
-        epoch=DEFAULT_EPOCH
-    )
-
 Returns the integer seconds from the epoch to the verifying month value in the
 GRIB message.
 """
 function from_grib_month(
-        message::GRIB.Message,
-        verifying_month_key="verifyingMonth",
-        epoch=DEFAULT_EPOCH
-    )
-
+    message::GRIB.Message,
+    verifying_month_key::String="verifyingMonth",
+    epoch::DateTime=DEFAULT_EPOCH
+)::Union{Int,Missing}
     if !haskey(message, verifying_month_key)
         return missing
     end
@@ -133,13 +126,11 @@ function from_grib_month(
 end
 
 """
-    build_valid_time(
-        time::Int, step::Int
-    )::Tuple{Tuple{},Int64}
+Returns a pair of `(dims, data)` based on the type of input
+"""
+function build_valid_time end
 
-Returns a pair of `(dims, data)` based on the type of input, this function
-behaves like:
-
+"""
 ```jldoctest
 julia> CfGRIB.build_valid_time(10, 10)
 ((), 36010)
@@ -157,13 +148,6 @@ function build_valid_time(
 end
 
 """
-    build_valid_time(
-        time::Array{Int, 1}, step::Int
-    )::Tuple{Tuple{String},Array{Int64,1}}
-
-Returns a pair of `(dims, data)` based on the type of input, this function
-behaves like:
-
 ```jldoctest
 julia> CfGRIB.build_valid_time([10], 10)
 (("time",), [36010])
@@ -181,13 +165,6 @@ function build_valid_time(
 end
 
 """
-    build_valid_time(
-        time::Int, step::Array{Int, 1}
-    )::Tuple{Tuple{String},Array{Int64,1}}
-
-Returns a pair of `(dims, data)` based on the type of input, this function
-behaves like:
-
 ```jldoctest
 julia> CfGRIB.build_valid_time(1, [10])
 (("step",), [36001])
@@ -205,22 +182,10 @@ function build_valid_time(
 end
 
 """
-    build_valid_time(
-        time::Array{Int, 1}, step::Array{Int, 1}
-    )::Union{
-        Tuple{Tuple{},Int64},
-        Tuple{Tuple{String,String},Array{Int64,2}}
-    }
-Returns a pair of `(dims, data)` based on the type of input, this function
-behaves like:
-
 ```jldoctest
 julia> CfGRIB.build_valid_time([10, 10], [10, 10])
 (("time", "step"), [36010 36010; 36010 36010])
 ```
-
-However if it receives two arrays of one element then it  dispatches to
-`build_valid_time(time::Int, step::Int)`:
 
 ```jldoctest
 julia> CfGRIB.build_valid_time([10], [10])
@@ -244,25 +209,7 @@ function build_valid_time(
     return dims, data
 end
 
-COMPUTED_KEYS = Dict(
-    "time" => (from_grib_date_time, to_grib_date_time),
-    #  TODO: Actually applying the from_grib_step function results in different
-    #  values to cfgrib.py...?
-    # "step" => (from_grib_step, to_grib_step),
-    "valid_time" => (
-        message -> from_grib_date_time(message, date_key="validityDate", time_key="validityTime"),
-        message -> to_grib_date_time(message, date_key="validityDate", time_key="validityTime"),
-    ),
-    "verifying_time" => (from_grib_month, m -> throw(ErrorException("Unimplemented"))),
-    "indexing_time" => (
-        message -> from_grib_date_time(message, date_key="indexingDate", time_key="indexingTime"),
-        message -> to_grib_date_time(message, date_key="indexingDate", time_key="indexingTime"),
-    ),
-)
-
-@doc """
-    COMPUTED_KEYS::Dict{String,Tuple{Function,Function}}
-
+"""
 Dictionary which maps a key to a conversion method. The first function is the
 'to' conversion, the second is 'from'.
 
@@ -296,15 +243,27 @@ would end up calling:
 julia> CfGRIB.COMPUTED_KEYS["time"](20160501, 0)
 1462060800
 ```
-""" COMPUTED_KEYS
-
+"""
+COMPUTED_KEYS = Dict(
+    "time" => (from_grib_date_time, to_grib_date_time),
+    #  TODO: Actually applying the from_grib_step function results in different
+    #  values to cfgrib.py...?
+    # "step" => (from_grib_step, to_grib_step),
+    "valid_time" => (
+        message -> from_grib_date_time(message, date_key="validityDate", time_key="validityTime"),
+        message -> to_grib_date_time(message, date_key="validityDate", time_key="validityTime"),
+    ),
+    "verifying_time" => (from_grib_month, m -> throw(ErrorException("Unimplemented"))),
+    "indexing_time" => (
+        message -> from_grib_date_time(message, date_key="indexingDate", time_key="indexingTime"),
+        message -> to_grib_date_time(message, date_key="indexingDate", time_key="indexingTime"),
+    ),
+)
 
 """
-    read_message(message::GRIB.Message, key::String)
-
 Reads a specific key from a GRIB.jl message. Attempts to convert the raw value
-associated with that key using the [`COMPUTED_KEYS`](@ref) mapping to
-`from_grib_*` functions.
+associated with that key using the [`COMPUTED_KEYS`](@ref COMPUTED_KEYS) mapping
+to `from_grib_*` functions.
 """
 function read_message(message::GRIB.Message, key::String)
     value = missing

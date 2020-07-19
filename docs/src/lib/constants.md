@@ -11,6 +11,8 @@ map grid types to correct representations of the data, etc...
 These constants are shown in the documentation for ease of use and reference
 purposes.
 
+---
+
 ```@index
 Modules = [CfGRIB]
 Pages   = ["constants.jl"]

@@ -7,6 +7,8 @@ Author = "Robert Rosca"
 CFMessage contains a number of utility functions for converting variables in a
 GRIB message to the values a user would expect to work with.
 
+---
+
 ```@index
 Modules = [CfGRIB]
 Pages   = ["cfmessage.jl"]

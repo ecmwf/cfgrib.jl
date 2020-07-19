@@ -13,6 +13,8 @@ with the GRIB.jl indexing approach.
 The indexing file defines the `FileIndex` type, as well as the constructors for
 that type.
 
+---
+
 ```@index
 Modules = [CfGRIB]
 Pages   = ["indexing.jl"]

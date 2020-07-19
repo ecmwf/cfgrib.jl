@@ -13,7 +13,7 @@ Model v4](https://www.unidata.ucar.edu/software/thredds/current/netcdf-java/CDM/
 following the [CF Conventions](http://cfconventions.org).
 
 This package is based on the python implementation in
-cfgrib.py](https://github.com/ecmwf/cfgrib) and closely follows the approaches
+[cfgrib.py](https://github.com/ecmwf/cfgrib) and closely follows the approaches
 of that package, but in Julia instead. Parity tests are automatically performed
 between the two to ensure that the data returned by the Julia version is
 equivalent to that from Python.

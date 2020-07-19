@@ -17,12 +17,26 @@ prepared for each of the backends so that users utilising FileIO can use its
 smart load functions which will load the file via CfGRIB.jl when the correct
 file extension and magic numbers are present.
 
+---
+
 ```@index
 Modules = [CfGRIB]
-Pages   = ["backends.jl", "backends/axisarrays.jl", "backends/dimensionaldata.jl"]
+Pages   = ["backends.jl"]
 ```
 
 ```@autodocs
 Modules = [CfGRIB]
-Pages   = ["backends.jl", "backends/axisarrays.jl", "backends/dimensionaldata.jl"]
+Pages   = ["backends.jl"]
+```
+
+---
+
+```@index
+Modules = [CfGRIB]
+Pages   = ["backends/axisarrays.jl", "backends/dimensionaldata.jl"]
+```
+
+```@autodocs
+Modules = [CfGRIB]
+Pages   = ["backends/axisarrays.jl", "backends/dimensionaldata.jl"]
 ```

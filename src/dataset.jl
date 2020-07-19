@@ -11,7 +11,7 @@ struct DatasetBuildError <: Exception
     error_message::String
 end
 
-
+"Map a GRIB file to the NetCDF Common Data Model with CF Conventions."
 struct DataSet
     dimensions::OrderedDict
     variables::OrderedDict
@@ -24,11 +24,10 @@ end
 #    - index_path
 #    - filter_by_keys
 function DataSet(
-        path::String;
-        read_keys::Array{String,1}=String[],
-        kwargs...
-    )::DataSet
-
+    path::String;
+    read_keys::Array{String,1}=String[],
+    kwargs...
+)::DataSet
     index_keys = sort([ALL_KEYS..., read_keys...])
     index = FileIndex(path, index_keys)
 
@@ -55,7 +54,7 @@ Base.size(A::OnDiskArray) = A.size
 Base.axes(A::OnDiskArray) = Tuple(Base.OneTo(i) for i in size(A))
 Base.axes(A::OnDiskArray, d::Int) = axes(A)[d]
 
-function Base.convert(::Type{T}, A::OnDiskArray) where T <: Array
+function Base.convert(::Type{T}, A::OnDiskArray)::T where T <: Array
     res = A[repeat([Colon()], length(size(A)))...]
     return T(res)
 end
@@ -130,9 +129,9 @@ end
 
 #  TODO: Implement filter_by_keys
 function enforce_unique_attributes(
-        header_values::OrderedDict{String, T} where T <: Array,
-        attribute_keys::Array
-    )
+    header_values::OrderedDict{String, T} where T <: Array,
+    attribute_keys::Array,
+)
     attributes = OrderedDict()
     for key in attribute_keys
         values = header_values[key]
@@ -166,9 +165,8 @@ end
 
 
 function build_geography_coordinates(
-        index, encode_cf, errors
-    )
-
+    index, encode_cf, errors
+)
     first_message = first(index)
     geo_coord_vars = OrderedDict()
     grid_type = CfGRIB.getone(index, "gridType")
@@ -253,11 +251,10 @@ end
 
 
 function encode_cf_first(
-        data_var_attrs::OrderedDict,
-        encode_cf::Tuple{Vararg{String}}=("parameter", "time"),
-        time_dims::Tuple{Vararg{String}}=("time", "step")
-    )
-
+    data_var_attrs::OrderedDict,
+    encode_cf::Tuple{Vararg{String}}=("parameter", "time"),
+    time_dims::Tuple{Vararg{String}}=("time", "step"),
+)
     #  NOTE: marking value as `const` just means it cannot be reassigned, the
     #  value can still be mutated/appended to, so be careful `append!`ing to
     #  the constants
@@ -302,10 +299,13 @@ end
 
 #  TODO: Add filter_by_keys
 function build_variable_components(
-        index; encode_cf=(),
-        errors="warn", squeeze=true, read_keys=String[],
-        time_dims=("time", "step")
-    )
+    index;
+    encode_cf=(),
+    errors="warn",
+    squeeze=true,
+    read_keys=String[],
+    time_dims=("time", "step"),
+)
     data_var_attrs_keys = CfGRIB.DATA_ATTRIBUTES_KEYS
     data_var_attrs_keys = [
         data_var_attrs_keys;
@@ -458,11 +458,13 @@ end
 
   # TODO: Add filter_by_keys
 function build_dataset_components(
-        index; errors="warn",
-        encode_cf=("parameter", "time", "geography", "vertical"),
-        squeeze=true, read_keys=String[], time_dims=("time", "step")
-    )
-
+    index;
+    errors="warn",
+    encode_cf=("parameter", "time", "geography", "vertical"),
+    squeeze=true,
+    read_keys=String[],
+    time_dims=("time", "step"),
+)
     dimensions = OrderedDict()
     variables = OrderedDict()
     for param_id in index["paramId"]
