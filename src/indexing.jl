@@ -7,6 +7,8 @@ export FileIndex
 
 """
 A mutable store for indices of a GRIB file
+
+TODO: Should probably change this to a immutable struct
 """
 mutable struct FileIndex
     "Version number used when saving/hashing index files, should change if the indexing structure changes breaking backwards-compatibility"

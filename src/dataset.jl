@@ -17,6 +17,11 @@ struct DataSet
     variables::OrderedDict
     attributes::OrderedDict
     encoding::Dict
+
+    #  Manually define inner constructor here so that it does not appear twice
+    #  in the docs
+    DataSet(dimensions, variables, attributes, encoding) = new(dimensions, variables, attributes, encoding)
+
 end
 
 #  TODO: missing arguments:
@@ -37,6 +42,7 @@ function DataSet(
 end
 
 
+"Struct that contains metadata for an array, used to lazy-load the array from disk only when requested"
 struct OnDiskArray
     grib_path::String
     size::Tuple
@@ -111,7 +117,7 @@ function Base.getindex(obj::OnDiskArray, key...)
 end
 
 
-#  TODO: Use parametric struct instead of any
+"Struct describing a cfgrib variable"
 Base.@kwdef struct Variable
     dimensions::Tuple{Vararg{String}}
     data::Union{Number, Array, OnDiskArray}
