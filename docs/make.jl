@@ -15,6 +15,7 @@ makedocs(
     doctest = false,
     pages = [
         "Home"    => "index.md",
+        "Manual"  => "man/guide.md",
         "Library" => Any[
             "Backends"  => "lib/backends.md",
             "CFMessage" => "lib/cfmessage.md",

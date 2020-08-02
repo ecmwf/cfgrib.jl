@@ -6,6 +6,7 @@
 [![latest release](https://img.shields.io/github/release/robertrosca/CfGRIB.jl.svg)](https://github.com/robertrosca/CfGRIB.jl/releases/latest)
 [![Apache 2 license](https://img.shields.io/github/license/robertrosca/CfGRIB.jl)](https://github.com/robertrosca/CfGRIB.jl/blob/master/LICENSE)
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://robertrosca.github.io/cfgrib.jl/dev/)
+[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 
 ## Description
 CfGRIB.jl is a julia interface to map GRIB files to the [Unidata's Common Data

@@ -11,36 +11,6 @@ struct DatasetBuildError <: Exception
     error_message::String
 end
 
-"Map a GRIB file to the NetCDF Common Data Model with CF Conventions."
-struct DataSet
-    dimensions::OrderedDict
-    variables::OrderedDict
-    attributes::OrderedDict
-    encoding::Dict
-
-    #  Manually define inner constructor here so that it does not appear twice
-    #  in the docs
-    DataSet(dimensions, variables, attributes, encoding) = new(dimensions, variables, attributes, encoding)
-
-end
-
-#  TODO: missing arguments:
-#    - grib_errors
-#    - index_path
-#    - filter_by_keys
-function DataSet(
-    path::String;
-    read_keys::Array{String,1}=String[],
-    kwargs...
-)::DataSet
-    index_keys = sort([ALL_KEYS..., read_keys...])
-    index = FileIndex(path, index_keys)
-
-    return DataSet(
-        build_dataset_components(index; read_keys=read_keys, kwargs...)...
-    )
-end
-
 
 "Struct that contains metadata for an array, used to lazy-load the array from disk only when requested"
 struct OnDiskArray
@@ -51,6 +21,11 @@ struct OnDiskArray
     missing_value::Any
     geo_ndim::Int
     dtype::Type
+
+    #  Manually define inner constructor here so that it does not appear twice
+    #  in the docs
+    OnDiskArray(grib_path, size, offsets, message_lengths, missing_value, geo_ndim, dtype) =
+        new(grib_path, size, offsets, message_lengths, missing_value, geo_ndim, dtype)
 end
 
 expand_key(key, shape) = Tuple((1:l)[k] for (k, l) in zip(key, shape))
@@ -119,9 +94,18 @@ end
 
 "Struct describing a cfgrib variable"
 Base.@kwdef struct Variable
+    "Name of the dimension(s) contained in this variable"
     dimensions::Tuple{Vararg{String}}
+
+    "Data contained in the variable, can point ot in-memory data or to a CfGRIB [`OnDiskArray`](@ref OnDiskArray)"
     data::Union{Number, Array, OnDiskArray}
+
+    "Dictionary containing metadata for the variable, typically the units, the long name, and the standard name"
     attributes::Dict{String, Any}
+
+    #  Manually define inner constructor here so that it does not appear twice
+    #  in the docs
+    Variable(dimensions, data, attributes) = new(dimensions, data, attributes)
 end
 
 function Base.:(==)(a::Variable, b::Variable)
@@ -130,6 +114,44 @@ function Base.:(==)(a::Variable, b::Variable)
     data = a.data == b.data
 
     return attributes && dimensions && data
+end
+
+
+"Map a GRIB file to the NetCDF Common Data Model with CF Conventions."
+struct DataSet
+    "`OrderedDict{String,Int}` of `\$DIMENSION_NAME => \$DIMENSION_LENGTH`."
+    dimensions::OrderedDict{String,Int}
+
+    "`OrderedDict{String,CfGRIB.Variable}` of `\$DIMENSION_NAME => \$DIMENSION_VARIABLE`, where the the variable is a [`Variable`](@ref Variable)."
+    variables::OrderedDict{String,CfGRIB.Variable}
+
+    "`OrderedDict{String,Any}` containing some metadata extracted from the file."
+    attributes::OrderedDict{String,Any}
+
+    "`Dict{String,Any}` containing metadata related to CfGRIB.jl, e.g. `filter_by_keys`"
+    encoding::Dict{String,Any}
+
+    #  Manually define inner constructor here so that it does not appear twice
+    #  in the docs
+    DataSet(dimensions, variables, attributes, encoding) =
+        new(dimensions, variables, attributes, encoding)
+end
+
+#  TODO: missing arguments:
+#    - grib_errors
+#    - index_path
+#    - filter_by_keys
+function DataSet(
+    path::String;
+    read_keys::Array{String,1}=String[],
+    kwargs...
+)::DataSet
+    index_keys = sort([ALL_KEYS..., read_keys...])
+    index = FileIndex(path, index_keys)
+
+    return DataSet(
+        build_dataset_components(index; read_keys=read_keys, kwargs...)...
+    )
 end
 
 
@@ -171,7 +193,9 @@ end
 
 
 function build_geography_coordinates(
-    index, encode_cf, errors
+    index::FileIndex,
+    encode_cf::Tuple,
+    errors
 )
     first_message = first(index)
     geo_coord_vars = OrderedDict()
@@ -260,7 +284,7 @@ function encode_cf_first(
     data_var_attrs::OrderedDict,
     encode_cf::Tuple{Vararg{String}}=("parameter", "time"),
     time_dims::Tuple{Vararg{String}}=("time", "step"),
-)
+)::Array{String,1}
     #  NOTE: marking value as `const` just means it cannot be reassigned, the
     #  value can still be mutated/appended to, so be careful `append!`ing to
     #  the constants
@@ -305,12 +329,12 @@ end
 
 #  TODO: Add filter_by_keys
 function build_variable_components(
-    index;
-    encode_cf=(),
+    index::FileIndex;
+    encode_cf::Tuple{Vararg{String}}=(),
     errors="warn",
-    squeeze=true,
-    read_keys=String[],
-    time_dims=("time", "step"),
+    squeeze::Bool=true,
+    read_keys::Array{String,1}=String[],
+    time_dims::Tuple{Vararg{String}}=("time", "step"),
 )
     data_var_attrs_keys = CfGRIB.DATA_ATTRIBUTES_KEYS
     data_var_attrs_keys = [
@@ -343,8 +367,7 @@ function build_variable_components(
         end
 
         attributes = Dict(
-            "long_name" => "original GRIB coordinate for key: " *
-                           "$(coord_key)($(coord_name))",
+            "long_name" => "original GRIB coordinate for key: $(coord_key)($(coord_name))",
             "units"     => "1",
         )
 
@@ -433,7 +456,10 @@ end
 
 
 #  TODO: logging, filter_by_keys
-function build_dataset_attributes(index; encoding)
+function build_dataset_attributes(
+    index::FileIndex;
+    encoding::Dict{String,Any}
+)
     attributes = enforce_unique_attributes(index, GLOBAL_ATTRIBUTES_KEYS)
     attributes["Conventions"] = "CF-1.7"
 
@@ -462,14 +488,14 @@ function build_dataset_attributes(index; encoding)
 end
 
 
-  # TODO: Add filter_by_keys
+# TODO: Add filter_by_keys
 function build_dataset_components(
-    index;
+    index::FileIndex;
     errors="warn",
-    encode_cf=("parameter", "time", "geography", "vertical"),
-    squeeze=true,
-    read_keys=String[],
-    time_dims=("time", "step"),
+    encode_cf::Tuple{Vararg{String}}=("parameter", "time", "geography", "vertical"),
+    squeeze::Bool=true,
+    read_keys::Array{String,1}=String[],
+    time_dims::Tuple{Vararg{String}}=("time", "step"),
 )
     dimensions = OrderedDict()
     variables = OrderedDict()
@@ -501,7 +527,7 @@ function build_dataset_components(
         "filter_by_keys" => "not_implemented",  # TODO: Add filter_by_keys
         "encode_cf" => encode_cf
     )
-    attributes = build_dataset_attributes(index, encoding=encoding)
+    attributes = build_dataset_attributes(index; encoding=encoding)
 
     return dimensions, variables, attributes, encoding
 end
