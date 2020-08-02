@@ -34,7 +34,11 @@ mutable struct FileIndex
     FileIndex() = new(v"0.0.0")
 end
 
-function FileIndex(grib_path::String, index_keys::Array{String, 1})
+function FileIndex(
+    grib_path::String,
+    index_keys::Array{String, 1};
+    filter_by_keys::Dict=Dict()
+)::FileIndex
     fileindex = FileIndex()
     fileindex.grib_path = grib_path
     fileindex.index_keys = index_keys
@@ -44,6 +48,10 @@ function FileIndex(grib_path::String, index_keys::Array{String, 1})
     else
         from_gribfile!(fileindex)
         get_header_values!(fileindex)
+    end
+
+    if length(filter_by_keys) > 0
+        fileindex = filter(fileindex, filter_by_keys...)
     end
 
     return fileindex
