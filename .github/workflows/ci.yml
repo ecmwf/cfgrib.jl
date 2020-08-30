@@ -7,17 +7,14 @@ on:
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         version: [1.4, 1.5, nightly]
-        os: [ubuntu-latest, macos-latest]
         continue-on-error: [false]
         include:
           - version: nightly
-            continue-on-error: true
-          - os: macos-latest
             continue-on-error: true
     continue-on-error: ${{ matrix.continue-on-error }}
     steps:
