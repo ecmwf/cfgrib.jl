@@ -46,6 +46,6 @@ jobs:
       - uses: julia-actions/julia-runtest@642d7a4
 
       - uses: julia-actions/julia-processcoverage@033f480
-      - uses: codecov/codecov-action@1
+      - uses: codecov/codecov-action@v1
         with:
           file: lcov.info
