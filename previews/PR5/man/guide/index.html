@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Manual · CfGRIB.jl</title><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">CfGRIB.jl</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li class="is-active"><a class="tocitem" href>Manual</a><ul class="internal"><li><a class="tocitem" href="#Internals-1"><span>Internals</span></a></li></ul></li><li><span class="tocitem">Library</span><ul><li><a class="tocitem" href="../../lib/backends/">Backends</a></li><li><a class="tocitem" href="../../lib/cfmessage/">CFMessage</a></li><li><a class="tocitem" href="../../lib/constants/">Constants</a></li><li><a class="tocitem" href="../../lib/dataset/">Dataset</a></li><li><a class="tocitem" href="../../lib/indexing/">Indexing</a></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Manual</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Manual</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/RobertRosca/cfgrib.jl/blob/master/docs/src/man/guide.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="Start-Guide-1"><a class="docs-heading-anchor" href="#Start-Guide-1">Start Guide</a><a class="docs-heading-anchor-permalink" href="#Start-Guide-1" title="Permalink"></a></h1><p>This is a quick start guide for how to begin using CfGRIB.jl, we&#39;ll go through the basics of how the package works, and then how to use it to load and interact with some basic data structures.</p><h2 id="Internals-1"><a class="docs-heading-anchor" href="#Internals-1">Internals</a><a class="docs-heading-anchor-permalink" href="#Internals-1" title="Permalink"></a></h2><p>The package internals are covered in the library section of the documentation in greater detail, however it is useful to have a vague sense of what is happening when you load a dataset.</p><p>First, we load the package, and for convenience create a string pointing to our file path:</p><pre><code class="language-julia-repl">julia&gt; using CfGRIB
+
+julia&gt; sample_data_dir = abspath(joinpath(dirname(pathof(CfGRIB)), &quot;..&quot;, &quot;test&quot;, &quot;sample-data&quot;))
+&quot;/home/runner/work/cfgrib.jl/cfgrib.jl/test/sample-data&quot;
+
+julia&gt; demo_file_path = joinpath(sample_data_dir, &quot;era5-levels-members.grib&quot;)
+&quot;/home/runner/work/cfgrib.jl/cfgrib.jl/test/sample-data/era5-levels-members.grib&quot;</code></pre><h3 id="FileIndex-1"><a class="docs-heading-anchor" href="#FileIndex-1">FileIndex</a><a class="docs-heading-anchor-permalink" href="#FileIndex-1" title="Permalink"></a></h3><p>Whenever you load a <code>grib</code> file, the first thing that happens is that the file index is read. The file index contains metadata which describes which messages contain what information inside the file. We can explore the index by manually creating a <a href="#FileIndex-1"><code>FileIndex</code></a> object.</p><p>First, we can look at the docstring for the <code>FileIndex</code> constructor by typing in <code>?</code> at the REPL to enter <code>help</code> mode, then type in <code>CfGRIB.FileIndex</code>, press enter, and we get the docstring:</p><pre><code class="language-julia">help?&gt; CfGRIB.FileIndex
+  Summary
+  ≡≡≡≡≡≡≡≡≡
+
+  mutable struct FileIndex
+
+  A mutable store for indices of a GRIB file
+
+  TODO: Should probably change this to a immutable struct
+
+  Fields
+  ≡≡≡≡≡≡≡≡
+
+    •    allowed_protocol_version::VersionNumber
+
+        Version number used when saving/hashing index files, should change if
+        the indexing structure changes breaking backwards-compatibility
+
+    •    grib_path::String
+
+        Path to the file the index belongs to
+
+    •    index_path::String
+
+        Path to the index cache file
+
+    •    index_keys::Array{String,1}
+
+        Array containing all of the index keys
+
+    •    offsets::Array{Pair{NamedTuple,Int64},1}
+
+        Array containing pairs of offsets[HeaderTuple(header_values)] =&gt; offset_field
+
+    •    message_lengths::Array{Int64,1}
+
+        Array containing the length of each message in the GRIB file
+
+    •    header_values::OrderedCollections.OrderedDict{String,Array}
+
+        Dictionary of all of the loaded header values in the GRIB file
+
+    •    filter_by_keys::Dict
+
+        Filters used when creating the file index
+
+  Constructors
+  ≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+
+  FileIndex()
+
+  defined at dev/CfGRIB/src/indexing.jl:34
+  (https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/indexing.jl#L34).
+
+  FileIndex(grib_path, index_keys)
+
+  defined at dev/CfGRIB/src/indexing.jl:38
+  (https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/indexing.jl#L38).</code></pre><p>The docstring is quite long, it explains the fields contained in the object, as well as giving a list of the constructors which can be used to create an instance of the object.</p><p>We&#39;ll use the second constructor, which takes in a path to the file and a list of keys. First, we pick which keys we want to use. In this case we&#39;ll just use the <code>ALL_KEYS</code> constant:</p><pre><code class="language-julia-repl">julia&gt; println(CfGRIB.ALL_KEYS)
+[&quot;DxInMetres&quot;, &quot;DyInMetres&quot;, &quot;J&quot;, &quot;K&quot;, &quot;LaDInDegrees&quot;, &quot;Latin1InDegrees&quot;, &quot;Latin2InDegrees&quot;, &quot;LoVInDegrees&quot;, &quot;M&quot;, &quot;N&quot;, &quot;NV&quot;, &quot;Nx&quot;, &quot;Ny&quot;, &quot;angleOfRotationInDegrees&quot;, &quot;centre&quot;, &quot;centreDescription&quot;, &quot;cfName&quot;, &quot;cfVarName&quot;, &quot;dataDate&quot;, &quot;dataTime&quot;, &quot;dataType&quot;, &quot;directionNumber&quot;, &quot;edition&quot;, &quot;endStep&quot;, &quot;forecastMonth&quot;, &quot;frequencyNumber&quot;, &quot;gridDefinitionDescription&quot;, &quot;gridType&quot;, &quot;iDirectionIncrementInDegrees&quot;, &quot;iScansNegatively&quot;, &quot;indexing_time&quot;, &quot;jDirectionIncrementInDegrees&quot;, &quot;jPointsAreConsecutive&quot;, &quot;jScansPositively&quot;, &quot;latitudeOfFirstGridPointInDegrees&quot;, &quot;latitudeOfLastGridPointInDegrees&quot;, &quot;latitudeOfSouthernPoleInDegrees&quot;, &quot;level&quot;, &quot;longitudeOfFirstGridPointInDegrees&quot;, &quot;longitudeOfLastGridPointInDegrees&quot;, &quot;longitudeOfSouthernPoleInDegrees&quot;, &quot;missingValue&quot;, &quot;name&quot;, &quot;number&quot;, &quot;numberOfDirections&quot;, &quot;numberOfFrequencies&quot;, &quot;numberOfPoints&quot;, &quot;paramId&quot;, &quot;pl&quot;, &quot;shortName&quot;, &quot;step&quot;, &quot;stepType&quot;, &quot;stepUnits&quot;, &quot;subCentre&quot;, &quot;time&quot;, &quot;totalNumber&quot;, &quot;typeOfLevel&quot;, &quot;units&quot;, &quot;valid_time&quot;, &quot;verifying_time&quot;]
+
+julia&gt; index = CfGRIB.FileIndex(
+                  demo_file_path,
+                  CfGRIB.ALL_KEYS
+              );</code></pre><p>From here you can explore fields contained in this object. Typically you will never interact with the <code>FileIndex</code> directly, as it&#39;s just used in the background to load the data.</p><h3 id="DataSet-1"><a class="docs-heading-anchor" href="#DataSet-1">DataSet</a><a class="docs-heading-anchor-permalink" href="#DataSet-1" title="Permalink"></a></h3><p>Once the <code>FileIndex</code> has been created, the next step is to use it to create a <a href="#DataSet-1"><code>DataSet</code></a> object. The <code>DataSet</code> is what what you use to access the stored data. The docstring says:</p><pre><code class="language-julia">help?&gt; CfGRIB.DataSet
+  Summary
+  ≡≡≡≡≡≡≡≡≡
+
+  struct DataSet
+
+  Map a GRIB file to the NetCDF Common Data Model with CF Conventions.
+
+  Fields
+  ≡≡≡≡≡≡≡≡
+
+    •    dimensions::OrderedCollections.OrderedDict{String,Int64}
+
+        OrderedDict{String,Int} of $DIMENSION_NAME =&gt; $DIMENSION_LENGTH.
+
+    •    variables::OrderedCollections.OrderedDict{String,CfGRIB.Variable}
+
+        OrderedDict{String,CfGRIB.Variable} of $DIMENSION_NAME =&gt; $DIMENSION_VARIABLE, where the the variable is a CfGRIB.jl Variable.
+
+    •    attributes::OrderedCollections.OrderedDict{String,Any}
+
+        OrderedDict{String,Any} containing some metadata extracted from the file.
+
+    •    encoding::Dict{String,Any}
+
+        Dict{String,Any} containing metadata related to CfGRIB.jl, e.g. filter_by_keys
+
+  Constructors
+  ≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+
+  DataSet(dimensions, variables, attributes, encoding)
+
+  defined at dev/CfGRIB/src/dataset.jl:127
+  (https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L127).
+
+  DataSet(path; read_keys, kwargs...)
+
+  defined at dev/CfGRIB/src/dataset.jl:140
+  (https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L140).</code></pre><p>Here we see references to <a href="#Variable-1"><code>Variable</code></a>, so we&#39;ll briefly explain those.</p><h4 id="Variable-1"><a class="docs-heading-anchor" href="#Variable-1">Variable</a><a class="docs-heading-anchor-permalink" href="#Variable-1" title="Permalink"></a></h4><p>A <code>Variable</code> is a basic struct in CfGRIB.jl which contains information for a variable read from a GRIB file:</p><pre><code class="language-julia">help?&gt; CfGRIB.Variable
+  Summary
+  ≡≡≡≡≡≡≡≡≡
+
+  struct Variable
+
+  Struct describing a cfgrib variable
+
+  Fields
+  ≡≡≡≡≡≡≡≡
+
+    •    dimensions::Tuple{Vararg{String,N} where N}
+
+        Name of the dimension(s) contained in this variable
+
+    •    data::Union{CfGRIB.OnDiskArray, Number, Array}
+
+        Data contained in the variable, can point ot in-memory data or to a CfGRIB
+        OnDiskArray
+
+    •    attributes::Dict{String,Any}
+
+        Dictionary containing metadata for the variable, typically the units, the long name,
+        and the standard name
+
+  Constructors
+  ≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+
+  Variable(dimensions, data, attributes)
+
+  defined at dev/CfGRIB/src/dataset.jl:108
+  (https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L108).</code></pre><h4 id="OnDiskArray-1"><a class="docs-heading-anchor" href="#OnDiskArray-1">OnDiskArray</a><a class="docs-heading-anchor-permalink" href="#OnDiskArray-1" title="Permalink"></a></h4><p>TODO</p><pre><code class="language-julia">help?&gt; CfGRIB.OnDiskArray
+  Summary
+  ≡≡≡≡≡≡≡≡≡
+
+  struct OnDiskArray
+
+  Struct that contains metadata for an array, used to lazy-load the array from disk only when
+  requested
+
+  Fields
+  ≡≡≡≡≡≡≡≡
+
+    •    grib_path::String
+
+    •    size::Tuple
+
+    •    offsets::OrderedCollections.OrderedDict
+
+    •    message_lengths::Array{Int64,1}
+
+    •    missing_value::Any
+
+    •    geo_ndim::Int64
+
+    •    dtype::Type
+
+  Constructors
+  ≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+
+  OnDiskArray(grib_path, size, offsets, message_lengths, missing_value, geo_ndim, dtype)
+
+  defined at dev/CfGRIB/src/dataset.jl:27
+  (https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L27).</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../../lib/backends/">Backends »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Sunday 30 August 2020 11:52">Sunday 30 August 2020</span>. Using Julia version 1.4.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
