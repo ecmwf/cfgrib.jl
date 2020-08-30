@@ -20,13 +20,13 @@ mutable struct FileIndex
     index_path::String
 
     "Array containing all of the index keys"
-    index_keys::Array{String, 1}
+    index_keys::Array{String,1}
     "Array containing pairs of `offsets[HeaderTuple(header_values)] => offset_field`"
-    offsets::Array{Pair{T where T <: NamedTuple, Int},1}
+    offsets::Array{Pair{T where T <: NamedTuple,Int},1}
     "Array containing the length of each message in the GRIB file"
-    message_lengths::Array{Int, 1}
+    message_lengths::Array{Int,1}
     "Dictionary of all of the loaded header values in the GRIB file"
-    header_values::OrderedDict{String, Array}
+    header_values::OrderedDict{String,Array}
 
     "Filters used when creating the file index"
     filter_by_keys::Dict
@@ -36,8 +36,8 @@ end
 
 function FileIndex(
     grib_path::String,
-    index_keys::Array{String, 1};
-    filter_by_keys::Dict=Dict()
+    index_keys::Array{String,1};
+    filter_by_keys::Dict=Dict(),
 )::FileIndex
     fileindex = FileIndex()
     fileindex.grib_path = grib_path
@@ -82,8 +82,8 @@ end
 
 
 function from_gribfile!(index::FileIndex)
-    offsets = OrderedDict{T where T <: NamedTuple, Int}()
-    count_offsets = Dict{Int, Int}()
+    offsets = OrderedDict{T where T <: NamedTuple,Int}()
+    count_offsets = Dict{Int,Int}()
 
     index_keys = index.index_keys
     index_key_count = length(index_keys)
@@ -94,7 +94,7 @@ function from_gribfile!(index::FileIndex)
     #  based on gribfile.nmessages w/ known-length arrays
     #  more, or if I/O overhead too large
     GribFile(index.grib_path) do f
-        message_lengths = Array{Int, 1}(undef, f.nmessages)
+        message_lengths = Array{Int,1}(undef, f.nmessages)
         for (nmessage, message) in enumerate(f)
             header_values = Array{Any}(undef, index_key_count)
             for (i, key) in enumerate(index_keys)
@@ -135,7 +135,7 @@ end
 
 
 function get_header_values!(index::FileIndex)
-    header_values = OrderedDict{String, Array}()
+    header_values = OrderedDict{String,Array}()
     for key in index.index_keys
         header_values[key] = unique([
             offset[1][Symbol(key)]

@@ -96,7 +96,7 @@ function from_grib_step(
     step_unit_key::String="stepUnits"
 )::Float64
     #  +1 as Julia is 1-indexed not 0
-    to_seconds = GRIB_STEP_UNITS_TO_SECONDS[message[step_unit_key]+1]
+    to_seconds = GRIB_STEP_UNITS_TO_SECONDS[message[step_unit_key] + 1]
     return message[step_key] * to_seconds / 3600.0
 end
 
@@ -154,12 +154,12 @@ julia> CfGRIB.build_valid_time([10], 10)
 ```
 """
 function build_valid_time(
-    time::Array{Int, 1}, step::Int
+    time::Array{Int,1}, step::Int
 )::Tuple{Tuple{String},Array{Int64,1}}
     step_s = step * 3600
 
     data = time .+ step_s
-    dims = ("time", )
+    dims = ("time",)
 
     return dims, data
 end
@@ -171,12 +171,12 @@ julia> CfGRIB.build_valid_time(1, [10])
 ```
 """
 function build_valid_time(
-    time::Int, step::Array{Int, 1}
+    time::Int, step::Array{Int,1}
 )::Tuple{Tuple{String},Array{Int64,1}}
     step_s = step * 3600
 
     data = time .+ step_s
-    dims = ("step", )
+    dims = ("step",)
 
     return dims, data
 end
@@ -193,7 +193,7 @@ julia> CfGRIB.build_valid_time([10], [10])
 ```
 """
 function build_valid_time(
-    time::Array{Int, 1}, step::Array{Int, 1}
+    time::Array{Int,1}, step::Array{Int,1}
 )::Union{
     Tuple{Tuple{},Int64},
     Tuple{Tuple{String,String},Array{Int64,2}}
@@ -249,15 +249,11 @@ COMPUTED_KEYS = Dict(
     #  TODO: Actually applying the from_grib_step function results in different
     #  values to cfgrib.py...?
     # "step" => (from_grib_step, to_grib_step),
-    "valid_time" => (
-        message -> from_grib_date_time(message, date_key="validityDate", time_key="validityTime"),
-        message -> to_grib_date_time(message, date_key="validityDate", time_key="validityTime"),
-    ),
+    "valid_time" => (message -> from_grib_date_time(message, date_key="validityDate", time_key="validityTime"),
+        message -> to_grib_date_time(message, date_key="validityDate", time_key="validityTime"),),
     "verifying_time" => (from_grib_month, m -> throw(ErrorException("Unimplemented"))),
-    "indexing_time" => (
-        message -> from_grib_date_time(message, date_key="indexingDate", time_key="indexingTime"),
-        message -> to_grib_date_time(message, date_key="indexingDate", time_key="indexingTime"),
-    ),
+    "indexing_time" => (message -> from_grib_date_time(message, date_key="indexingDate", time_key="indexingTime"),
+        message -> to_grib_date_time(message, date_key="indexingDate", time_key="indexingTime"),),
 )
 
 """
