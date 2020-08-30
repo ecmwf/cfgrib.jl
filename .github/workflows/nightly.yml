@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: julia-actions/setup-julia@9d7e519
+      - uses: julia-actions/setup-julia@master
         with:
           version: ${{ matrix.version }}
 
@@ -42,11 +42,11 @@ jobs:
             Pkg.develop(PackageSpec(url="https://github.com/weech/GRIB.jl.git"));\
           '
 
-      - uses: julia-actions/julia-buildpkg@9ae2dda
+      - uses: julia-actions/julia-buildpkg@master
 
-      - uses: julia-actions/julia-runtest@642d7a4
+      - uses: julia-actions/julia-runtest@master
 
-      - uses: julia-actions/julia-processcoverage@033f480
+      - uses: julia-actions/julia-processcoverage@master
       - uses: codecov/codecov-action@v1
         with:
           file: lcov.info
