@@ -9,18 +9,13 @@ jobs:
     name: Julia ${{ matrix.version }} - ubuntu-latest
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         version: [1.4, 1.5]
-        continue-on-error: [false]
-        include:
-          - version: nightly
-            continue-on-error: true
-    continue-on-error: ${{ matrix.continue-on-error }}
     steps:
       - uses: actions/checkout@v2
 
-      - uses: julia-actions/setup-julia@v1
+      - uses: julia-actions/setup-julia@8aadcc191512ecf312b7e6e4f063dfbe8ee01e27
         with:
           version: ${{ matrix.version }}
 
@@ -46,11 +41,11 @@ jobs:
             Pkg.develop(PackageSpec(url="https://github.com/weech/GRIB.jl.git"));\
           '
 
-      - uses: julia-actions/julia-buildpkg@latest
+      - uses: julia-actions/julia-buildpkg@9ae2dda33d6efd1a7b5d43ec7377b7d20490a51b
 
-      - uses: julia-actions/julia-runtest@latest
+      - uses: julia-actions/julia-runtest@8eb690078f513f33f6228583dcf261d7cd722365
 
-      - uses: julia-actions/julia-processcoverage@v1
-      - uses: codecov/codecov-action@v1
+      - uses: julia-actions/julia-processcoverage@6cb1ebb8b8889c5927954550c1aa2cd2f49f3e79
+      - uses: codecov/codecov-action@a10ae7dc1c0014d1fe30439371d02bd5b7c87d2a
         with:
           file: lcov.info
