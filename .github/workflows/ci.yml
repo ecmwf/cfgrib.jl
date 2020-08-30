@@ -21,17 +21,26 @@ jobs:
         with:
           version: ${{ matrix.version }}
 
-      - run: |
+      - name: Install python dependencies
+        run: |
           julia --project --color=yes --check-bounds=yes -e '\
             using Pkg;\
-            Pkg.develop(PackageSpec(url="https://github.com/weech/GRIB.jl.git#5710a1f462e888ad38f6e3b282df3fb953478d1b"));\
-            Pkg.instantiate(); Pkg.build();\
-            Pkg.add("Conda"), Pkg.add("PyCall");\
+            Pkg.add("Conda");\
+            Pkg.add("PyCall");\
+            Pkg.build();\
           '
+
           julia --project --color=yes --check-bounds=yes -e '\
             using Pkg; using Conda;\
             ENV["PYTHON"] = Conda.PYTHONDIR; Pkg.build("PyCall");\
             Conda.add_channel("conda-forge"); Conda.add("cfgrib");\
+          '
+
+      - name: Install GRIB.jl
+        run: |
+          julia --project --color=yes --check-bounds=yes -e '\
+            using Pkg;\
+            Pkg.develop(PackageSpec(url="https://github.com/weech/GRIB.jl.git"));\
           '
 
       - uses: julia-actions/julia-buildpkg@latest
