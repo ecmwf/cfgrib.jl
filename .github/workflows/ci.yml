@@ -6,12 +6,12 @@ on:
 
 jobs:
   test:
-    name: Julia ${{ matrix.version }} - ${{ matrix.os }}
+    name: Julia ${{ matrix.version }} - ubuntu-latest
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        version: [1.4, 1.5, nightly]
+        version: [1.4, 1.5]
         continue-on-error: [false]
         include:
           - version: nightly
