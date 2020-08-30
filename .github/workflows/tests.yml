@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: julia-actions/setup-julia@8aadcc191512ecf312b7e6e4f063dfbe8ee01e27
+      - uses: julia-actions/setup-julia@8aadcc1
         with:
           version: ${{ matrix.version }}
 
@@ -41,11 +41,11 @@ jobs:
             Pkg.develop(PackageSpec(url="https://github.com/weech/GRIB.jl.git"));\
           '
 
-      - uses: julia-actions/julia-buildpkg@9ae2dda33d6efd1a7b5d43ec7377b7d20490a51b
+      - uses: julia-actions/julia-buildpkg@9ae2dda
 
-      - uses: julia-actions/julia-runtest@8eb690078f513f33f6228583dcf261d7cd722365
+      - uses: julia-actions/julia-runtest@8eb6900
 
-      - uses: julia-actions/julia-processcoverage@6cb1ebb8b8889c5927954550c1aa2cd2f49f3e79
-      - uses: codecov/codecov-action@a10ae7dc1c0014d1fe30439371d02bd5b7c87d2a
+      - uses: julia-actions/julia-processcoverage@6cb1ebb
+      - uses: codecov/codecov-action@a10ae7d
         with:
           file: lcov.info
