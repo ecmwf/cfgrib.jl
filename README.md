@@ -4,8 +4,8 @@
 [![latest release](https://img.shields.io/github/release/robertrosca/CfGRIB.jl.svg)](https://github.com/robertrosca/CfGRIB.jl/releases/latest)
 [![Apache 2 license](https://img.shields.io/github/license/robertrosca/CfGRIB.jl)](https://github.com/robertrosca/CfGRIB.jl/blob/master/LICENSE)
 
-[![Build Status](https://github.com/robertrosca/cfgrib.jl-private/workflows/Tests/badge.svg)](https://github.com/RobertRosca/cfgrib.jl-private/actions?query=workflow%3ATests)
-[![Build Status](https://github.com/robertrosca/cfgrib.jl-private/workflows/Nightly/badge.svg)](https://github.com/RobertRosca/cfgrib.jl-private/actions?query=workflow%3ANightly)
+[![Build Status](https://github.com/robertrosca/cfgrib.jl/workflows/Tests/badge.svg)](https://github.com/RobertRosca/cfgrib.jl/actions?query=workflow%3ATests)
+[![Build Status](https://github.com/robertrosca/cfgrib.jl/workflows/Nightly/badge.svg)](https://github.com/RobertRosca/cfgrib.jl/actions?query=workflow%3ANightly)
 [![Codecov](https://codecov.io/gh/robertrosca/CfGRIB.jl/branch/dev/graph/badge.svg)](https://codecov.io/gh/robertrosca/CfGRIB.jl)
 
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://robertrosca.github.io/cfgrib.jl/dev/)
