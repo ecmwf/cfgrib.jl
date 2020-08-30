@@ -69,12 +69,12 @@ end
 convert(::Type{AxisArray}, dataset::DataSet)::AxisArrayWrapper = convert(AxisArrayWrapper, dataset)
 
 function Base.show(io::IO, mime::MIME"text/plain", da::AxisArrayWrapper)
-    dimensions_list = join(["$k: $v" for (k,v) in pairs(da.dimensions)], ", ")
+    dimensions_list = join(["$k: $v" for (k, v) in pairs(da.dimensions)], ", ")
     str_dimensions = " Dimensions ($(length(da.dimensions))):\n  $dimensions_list"
 
     dataset_list = [summary(ds) for ds in da.datasets]
-    axes_list = split(dataset_list[1], "\n")[2:end-1]
-    axes_list = replace.(axes_list, "    "=>"  ")
+    axes_list = split(dataset_list[1], "\n")[2:end - 1]
+    axes_list = replace.(axes_list, "    " => "  ")
     #  When arrays are printed their length is limited by the current displaysize
     #  so adding text before/after will make the text overflow to the next line
     #  here we do a hacky fix for that
@@ -89,11 +89,11 @@ function Base.show(io::IO, mime::MIME"text/plain", da::AxisArrayWrapper)
         #  dot dot dot (…) index - index of pair of values that has ellipses
         #  e.g. `15.0 … 342.0`
         ddd_idx = findfirst(occursin.("…", split(line, ",")))
-        while sum(length.(new_line))+length(new_line)+3 > display_width
+        while sum(length.(new_line)) + length(new_line) + 3 > display_width
             deleteat!(new_line, ddd_idx)
-            str_new_ellipses = "$(new_line[ddd_idx-1])  … $(new_line[ddd_idx])"
-            deleteat!(new_line, ddd_idx-1)
-            new_line[ddd_idx-1] = str_new_ellipses
+            str_new_ellipses = "$(new_line[ddd_idx - 1])  … $(new_line[ddd_idx])"
+            deleteat!(new_line, ddd_idx - 1)
+            new_line[ddd_idx - 1] = str_new_ellipses
             ddd_idx = ddd_idx - 1
         end
 
@@ -105,7 +105,7 @@ function Base.show(io::IO, mime::MIME"text/plain", da::AxisArrayWrapper)
 
     dataset_data = [split(dl, "\n")[end] for dl in dataset_list]
     dataset_data = [
-        "   "*replace(s, "And data, a"=>string(keys(da.datasets)[i])*",")
+        "   " * replace(s, "And data, a" => string(keys(da.datasets)[i]) * ",")
         for (i, s)
         in enumerate(dataset_data)
     ]

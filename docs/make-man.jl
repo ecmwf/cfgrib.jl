@@ -15,14 +15,7 @@ makedocs(
     doctest = false,
     pages = [
         "Home"    => "index.md",
-        "Manual"  => "man/guide.md",
-        "Library" => Any[
-            "Backends"  => "lib/backends.md",
-            "CFMessage" => "lib/cfmessage.md",
-            "Constants" => "lib/constants.md",
-            "Dataset"   => "lib/dataset.md",
-            "Indexing"  => "lib/indexing.md",
-        ],
+        "Manual"  => "man/quick-start-guide.md",
     ]
 )
 

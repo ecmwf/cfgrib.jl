@@ -1,11 +1,15 @@
 # CfGRIB.jl
 
 [![lifecycle](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-[![Build Status](https://travis-ci.com/robertrosca/CfGRIB.jl.svg?branch=dev)](https://travis-ci.com/robertrosca/CfGRIB.jl)
-[![Codecov](https://codecov.io/gh/robertrosca/CfGRIB.jl/branch/dev/graph/badge.svg)](https://codecov.io/gh/robertrosca/CfGRIB.jl)
 [![latest release](https://img.shields.io/github/release/robertrosca/CfGRIB.jl.svg)](https://github.com/robertrosca/CfGRIB.jl/releases/latest)
 [![Apache 2 license](https://img.shields.io/github/license/robertrosca/CfGRIB.jl)](https://github.com/robertrosca/CfGRIB.jl/blob/master/LICENSE)
+
+[![Build Status](https://github.com/robertrosca/cfgrib.jl/workflows/Tests/badge.svg)](https://github.com/RobertRosca/cfgrib.jl/actions?query=workflow%3ATests)
+[![Build Status](https://github.com/robertrosca/cfgrib.jl/workflows/Nightly/badge.svg)](https://github.com/RobertRosca/cfgrib.jl/actions?query=workflow%3ANightly)
+[![Codecov](https://codecov.io/gh/robertrosca/CfGRIB.jl/branch/dev/graph/badge.svg)](https://codecov.io/gh/robertrosca/CfGRIB.jl)
+
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://robertrosca.github.io/cfgrib.jl/dev/)
+[![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 
 ## Description
 CfGRIB.jl is a julia interface to map GRIB files to the [Unidata's Common Data
