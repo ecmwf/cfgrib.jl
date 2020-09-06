@@ -1,11 +1,11 @@
-# Start Guide
+# In Depth Guide
+This is a start guide for how the internals of CfGRIB.jl work, targeted
+towards advanced users or those who want to work with the internals of the code.
 
-This is a quick start guide for how to begin using CfGRIB.jl, we'll go through
-the basics of how the package works, and then how to use it to load and interact
-with some basic data structures.
+If you want a quick guide on how to use the package then check the [`Quick Start
+Guide`](@ref)
 
 ## Internals
-
 The package internals are covered in the library section of the documentation in
 greater detail, however it is useful to have a vague sense of what is happening
 when you load a dataset.
@@ -21,8 +21,7 @@ sample_data_dir = abspath(joinpath(dirname(pathof(CfGRIB)), "..", "test", "sampl
 demo_file_path = joinpath(sample_data_dir, "era5-levels-members.grib")
 ```
 
-### FileIndex
-
+### `FileIndex`
 Whenever you load a `grib` file, the first thing that happens is that the file
 index is read. The file index contains metadata which describes which messages
 contain what information inside the file. We can explore the index by manually
@@ -114,8 +113,7 @@ From here you can explore fields contained in this object. Typically you will
 never interact with the `FileIndex` directly, as it's just used in the
 background to load the data.
 
-### DataSet
-
+### `DataSet`
 Once the `FileIndex` has been created, the next step is to use it to create a
 [`DataSet`](@ref DataSet) object. The `DataSet` is what what you use to access
 the stored data. The docstring says:
@@ -165,8 +163,7 @@ help?> CfGRIB.DataSet
 Here we see references to [`Variable`](@ref Variable), so we'll briefly explain
 those.
 
-#### Variable
-
+#### `Variable`
 A `Variable` is a basic struct in CfGRIB.jl which contains information for a
 variable read from a GRIB file:
 
@@ -205,9 +202,16 @@ help?> CfGRIB.Variable
   (https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L108).
 ```
 
-#### OnDiskArray
+#### `OnDiskArray`
 
-TODO
+As explained above, `Variable`s contain a `data` field, this data can either be
+in-memory data (`Array`, `Number`), or it could be an `OnDiskArray`. On disk
+arrays are, as the name hints, a way to represent data stored on the disk
+before that data is loaded.
+
+This is done do make it a bit easier to deal with large datasets, as the data is
+only lazily loaded in when the user attempts to read it. And then, only the
+requested data is stored in memory.
 
 ```julia
 help?> CfGRIB.OnDiskArray
@@ -244,3 +248,38 @@ help?> CfGRIB.OnDiskArray
   defined at dev/CfGRIB/src/dataset.jl:27
   (https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L27).
 ```
+
+The `OnDiskArray` object contains enough information to fully describe the data
+stored on disk, and to allow for easy indexing into this data. A custom
+`getindex` method dispatches off of this type which opens the grib file at
+`grib_path` and reads only the relevant messages.
+
+For example, if a 3 dimensional array is described by `OnDiskArray`, and the
+user requests information with index `[1, :, :]`, then only messages within
+that index are loaded from the grib file.
+
+### `DataSet` Constructors
+
+Now that the groundwork is laid down, lets look into how files are read and used
+in the end. The most basic option is calling `DataSet` with a string as a path,
+this will use the constructor defined at dev/CfGRIB/src/dataset.jl:140
+(https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L140).
+
+As you can see this creates a `FileIndex`, and then returns:
+
+```julia
+DataSet(build_dataset_components(
+    index;
+    errors=errors,
+    encode_cf=encode_cf,
+    squeeze=squeeze,
+    read_keys=read_keys,
+    time_dims=time_dims,
+)...)
+```
+
+The call to [`build_dataset_components`](@ref) returns the dimensions,
+variables, attributes, and encoding read from a file. These four variables are
+then passed to the other relevant constructor defined at
+dev/CfGRIB/src/dataset.jl:127
+(https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L127).
