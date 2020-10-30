@@ -1,8 +1,11 @@
 name: Nightly
 
 on:
-  - push
-  - pull_request
+  pull_request:
+  push:
+  schedule:
+    - cron:  '0 07 * * *'
+  workflow_dispatch:
 
 jobs:
   test:
