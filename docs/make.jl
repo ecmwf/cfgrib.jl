@@ -17,11 +17,11 @@ makedocs(
         "Home"    => "index.md",
         "Manual"  => "man/guide.md",
         "Library" => Any[
-            "Backends"  => "lib/backends.md",
-            "CFMessage" => "lib/cfmessage.md",
-            "Constants" => "lib/constants.md",
-            "Dataset"   => "lib/dataset.md",
-            "Indexing"  => "lib/indexing.md",
+            # "Public" => "lib/public.md",
+            "Internals" => map(
+                s -> "lib/internals/$(s)",
+                sort(readdir(joinpath(@__DIR__, "src/lib/internals")))
+            ),
         ],
     ]
 )
