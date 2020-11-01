@@ -19,7 +19,7 @@ version = "0.5.10"
 deps = ["DataStructures", "Dates", "DocStringExtensions", "FileIO", "GRIB", "JSON", "REPL"]
 git-tree-sha1 = "96d86177b4805091bfaf3fc3f3aa32b5b117ce4f"
 repo-rev = "dev"
-repo-url = "https://github.com/robertrosca/cfgrib.jl"
+repo-url = "https://github.com/ecmwf/cfgrib.jl"
 uuid = "b476ad61-2aff-463c-b862-1d4433a0d503"
 version = "0.1.0"
 

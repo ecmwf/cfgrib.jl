@@ -27,7 +27,7 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/RobertRosca/cfgrib.jl",
+    repo = "github.com/ecmwf/cfgrib.jl",
     devbranch="dev",
     push_preview=true,
 )

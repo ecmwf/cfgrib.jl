@@ -13,13 +13,13 @@ Julia can be installed from
 
 Packages in Julia are usually installed by entering package mode (press `]` in
 the julia prompt on a newline) and simply running `] add
-https://github.com/RobertRosca/cfgrib.jl`, however as the aim is to dive a bit
+https://github.com/ecmwf/cfgrib.jl`, however as the aim is to dive a bit
 into the code it will be easier to install `cfgrib.jl` as a project instead.
 
 To do this, you clone the project, `cd` into it, and then run instantiate, e.g:
 
 ```
-> git clone https://github.com/RobertRosca/cfgrib.jl
+> git clone https://github.com/ecmwf/cfgrib.jl
 > cd cfgrib.jl
 > julia
 julia > ]

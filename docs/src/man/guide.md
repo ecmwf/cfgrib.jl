@@ -84,12 +84,12 @@ help?> CfGRIB.FileIndex
   FileIndex()
 
   defined at dev/CfGRIB/src/indexing.jl:34
-  (https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/indexing.jl#L34).
+  (https://github.com/ecmwf/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/indexing.jl#L34).
 
   FileIndex(grib_path, index_keys)
 
   defined at dev/CfGRIB/src/indexing.jl:38
-  (https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/indexing.jl#L38).
+  (https://github.com/ecmwf/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/indexing.jl#L38).
 ```
 
 The docstring is quite long, it explains the fields contained in the object, as
@@ -152,12 +152,12 @@ help?> CfGRIB.DataSet
   DataSet(dimensions, variables, attributes, encoding)
 
   defined at dev/CfGRIB/src/dataset.jl:127
-  (https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L127).
+  (https://github.com/ecmwf/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L127).
 
   DataSet(path; read_keys, kwargs...)
 
   defined at dev/CfGRIB/src/dataset.jl:140
-  (https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L140).
+  (https://github.com/ecmwf/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L140).
 ```
 
 Here we see references to [`Variable`](@ref Variable), so we'll briefly explain
@@ -199,7 +199,7 @@ help?> CfGRIB.Variable
   Variable(dimensions, data, attributes)
 
   defined at dev/CfGRIB/src/dataset.jl:108
-  (https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L108).
+  (https://github.com/ecmwf/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L108).
 ```
 
 #### `OnDiskArray`
@@ -246,7 +246,7 @@ help?> CfGRIB.OnDiskArray
   OnDiskArray(grib_path, size, offsets, message_lengths, missing_value, geo_ndim, dtype)
 
   defined at dev/CfGRIB/src/dataset.jl:27
-  (https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L27).
+  (https://github.com/ecmwf/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L27).
 ```
 
 The `OnDiskArray` object contains enough information to fully describe the data
@@ -263,7 +263,7 @@ that index are loaded from the grib file.
 Now that the groundwork is laid down, lets look into how files are read and used
 in the end. The most basic option is calling `DataSet` with a string as a path,
 this will use the constructor defined at dev/CfGRIB/src/dataset.jl:140
-(https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L140).
+(https://github.com/ecmwf/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L140).
 
 As you can see this creates a `FileIndex`, and then returns:
 
@@ -282,4 +282,109 @@ The call to [`build_dataset_components`](@ref) returns the dimensions,
 variables, attributes, and encoding read from a file. These four variables are
 then passed to the other relevant constructor defined at
 dev/CfGRIB/src/dataset.jl:127
-(https://github.com/RobertRosca/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L127).
+(https://github.com/ecmwf/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L127).
+
+The constructor then returns a `DataSet` object.
+
+## Getting Data from a `DataSet`
+
+Onc you have a `DataSet` object, you probably want to access its data.
+
+### Direct Access
+
+The most basic way to do this is to just access the `variables` directly. For
+example:
+
+```@repl 1
+dataset = CfGRIB.DataSet(demo_file_path);
+
+dataset.dimensions
+
+dataset.variables
+```
+
+From here you can check the [`Variable`](@ref) documentation to see what is
+stored in these. So, if we want to get the data for `z`:
+
+```@repl 1
+dataset.variables["z"]
+
+dataset.variables["z"].data
+
+convert(Array, dataset.variables["z"].data)[:, :, 1, 1, 1]
+```
+
+Since it's an [`OnDiskArray`](@ref) it has to be `converted` (which in this case
+just reads the data from disk) into an Array. Once that's done, it's just a
+standard array type which can be accessed.
+
+For a normal variable stored in memory this is a bit easier as the reading step
+does not have to be performed:
+
+```@repl 1
+dataset.variables["number"]
+
+dataset.variables["number"].data
+```
+
+Accessing all of the data this way would be extremely awkward, so we provide a
+number of multidimensional named-axis backends which make data access far
+easier.
+
+### Using Named Dimensional Backends
+
+The recommended way to use CfGRIB.jl is to use an array backend. More
+information about backends can be found on the [Backends](@ref lib_backends)
+documentation page.
+
+If one of the backend dependencies is available you can convert to that backend
+data type with the `convert` function:
+
+```@repl 1
+using AxisArrays
+
+dimensional_dataset = convert(AxisArray, dataset)
+```
+
+This conversion to a backend will create an object for that specific backend,
+preserving all of the data that was present in our `DataSet` objects (e.g. the
+metadata will all be propagated through).
+
+Current backend implementations have two limitations:
+1. No 'dataset' like support
+2. No metadata support
+
+These limitations mean that we have to create a wrapper struct which can hold
+the multidimensional array type from the backend, as well as some additional
+attributes.
+
+In the python `xarray` package, there are two basic types: a `DataArray` and a
+`DataSet`. The `DataArray` is a multidimensional array of a single variable,
+which contains information for that variable as well as information about the
+dimensions which enables useful indexing capabilities.
+
+The `DataSet` is a set of **multiple** `DataArray`s with common dimensions. This
+lets you have a `DataArray` containing pressure information with dimensions of,
+for example, time, latitude, longitude, and height; if you have another set of
+data with the same dimensions but for temperature then you can store both in a
+singe `DataSet`.
+
+The backends we currently use do not have this functionality, so instead we just
+wrap the two variables and allow for easy access to both.
+
+Additionally, our `DataSet` contains some more metadata (such as the attributes
+and encoding information), which also cannot be stored in the array backends,
+so we store that in the wrapper as well.
+
+To access the data you first access a single specific dataset and then index
+into it as per the docs for your chosen backend. For example, above we use
+`AxisArrays` as the backend, so:
+
+```@repl 1
+using AxisArrays
+
+z = dimensional_dataset.z;  # Looking at the `z` variable
+
+z[number=atvalue(0), isobaricInhPa=700..900, longitude=40..44]
+```
+
