@@ -1,15 +1,12 @@
-using Pkg
-
-pushfirst!(LOAD_PATH, joinpath(@__DIR__, ".."))
-
-Pkg.activate(joinpath(@__DIR__))
-# Pkg.instantiate()
-# Pkg.activate(); Pkg.instantiate()
-
 using Documenter, CfGRIB
 
 makedocs(
     modules = [CfGRIB],
+    format = Documenter.HTML(
+        # Use clean URLs, unless built as a "local" build
+        prettyurls = !("local" in ARGS),
+        canonical = "https://ecmwf.github.io/cfgrib.jl/stable/",
+    ),
     clean = false,
     sitename="CfGRIB.jl",
     doctest = false,
