@@ -1,14 +1,14 @@
 # CfGRIB.jl
 
 [![lifecycle](https://www.repostatus.org/badges/latest/wip.svg)](https://www.repostatus.org/#wip)
-[![latest release](https://img.shields.io/github/release/robertrosca/CfGRIB.jl.svg)](https://github.com/ecmwf/cfgrib.jl/releases/latest)
-[![Apache 2 license](https://img.shields.io/github/license/robertrosca/CfGRIB.jl)](https://github.com/ecmwf/cfgrib.jl/blob/master/LICENSE)
+[![latest release](https://img.shields.io/github/release/ecmwf/CfGRIB.jl.svg)](https://github.com/ecmwf/cfgrib.jl/releases/latest)
+[![Apache 2 license](https://img.shields.io/github/license/ecmwf/CfGRIB.jl)](https://github.com/ecmwf/cfgrib.jl/blob/master/LICENSE)
 
 [![Build Status](https://github.com/ecmwf/cfgrib.jl/workflows/Tests/badge.svg)](https://github.com/ecmwf/cfgrib.jl/actions?query=workflow%3ATests)
 [![Build Status](https://github.com/ecmwf/cfgrib.jl/workflows/Nightly/badge.svg)](https://github.com/ecmwf/cfgrib.jl/actions?query=workflow%3ANightly)
-[![Codecov](https://codecov.io/gh/robertrosca/CfGRIB.jl/branch/dev/graph/badge.svg)](https://codecov.io/gh/robertrosca/CfGRIB.jl)
+[![Codecov](https://codecov.io/gh/ecmwf/CfGRIB.jl/branch/dev/graph/badge.svg)](https://codecov.io/gh/ecmwf/CfGRIB.jl)
 
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://robertrosca.github.io/cfgrib.jl/dev/)
+[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://ecmwf.github.io/cfgrib.jl/dev/)
 [![Code Style: Blue](https://img.shields.io/badge/code%20style-blue-4495d1.svg)](https://github.com/invenia/BlueStyle)
 
 ## Description
