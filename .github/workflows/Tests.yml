@@ -15,37 +15,15 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
-      - uses: julia-actions/setup-julia@9d7e519
+      - uses: julia-actions/setup-julia@d3ce119a16594ea9e5d7974813970c73b6ab9e94
         with:
           version: ${{ matrix.version }}
 
-      - name: Install python dependencies
-        run: |
-          julia --project --color=yes --check-bounds=yes -e '\
-            using Pkg;\
-            Pkg.add("Conda");\
-            Pkg.add("PyCall");\
-            Pkg.build();\
-          '
+      - uses: julia-actions/julia-buildpkg@74a86a50b0345ff12bcf309660171b9661bdacda
 
-          julia --project --color=yes --check-bounds=yes -e '\
-            using Pkg; using Conda;\
-            ENV["PYTHON"] = Conda.PYTHONDIR; Pkg.build("PyCall");\
-            Conda.add_channel("conda-forge"); Conda.add("cfgrib");\
-          '
+      - uses: julia-actions/julia-runtest@6513b45da508e097dcc44a39d4a8b43f75132b37
 
-      - name: Install GRIB.jl
-        run: |
-          julia --project --color=yes --check-bounds=yes -e '\
-            using Pkg;\
-            Pkg.develop(PackageSpec(url="https://github.com/weech/GRIB.jl.git"));\
-          '
-
-      - uses: julia-actions/julia-buildpkg@9ae2dda
-
-      - uses: julia-actions/julia-runtest@642d7a4
-
-      - uses: julia-actions/julia-processcoverage@033f480
+      - uses: julia-actions/julia-processcoverage@033f48081796acf509d3dd406127b5b7eee3d2d3
       - uses: codecov/codecov-action@v1
         with:
           file: lcov.info
