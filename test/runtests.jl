@@ -1,5 +1,13 @@
-using CfGRIB
 using Test
+
+using CfGRIB
+using Conda
+
+
+if !(haskey(Conda._installed_packages_dict(), "cfgrib"))
+    Conda.add_channel("conda-forge")
+    Conda.add("cfgrib")
+end
 
 
 const dir_tests = abspath(joinpath(dirname(pathof(CfGRIB)), "..", "test"))
