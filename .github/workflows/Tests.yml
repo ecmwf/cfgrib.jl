@@ -5,7 +5,7 @@ on:
   - pull_request
 
 jobs:
-  test:
+  tests:
     name: Julia ${{ matrix.version }} - ubuntu-latest
     runs-on: ubuntu-latest
     strategy:
