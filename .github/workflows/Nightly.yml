@@ -8,48 +8,50 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
+  nightly:
     name: Julia ${{ matrix.version }} - ubuntu-latest
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         version: [nightly]
-    continue-on-error: false
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v2
 
-      - uses: julia-actions/setup-julia@latest
+      - uses: julia-actions/setup-julia@d3ce119a16594ea9e5d7974813970c73b6ab9e94
         with:
           version: ${{ matrix.version }}
 
-      - name: Install python dependencies
+      - name: Build Package
+        env:
+          JULIA_PKG_SERVER: ""
         run: |
-          julia --project --color=yes --check-bounds=yes -e '\
-            using Pkg;\
-            Pkg.add("Conda");\
-            Pkg.add("PyCall");\
-            Pkg.build();\
-          '
+          #  The actions are written directly to allow for nekost/act local runs
+          #  https://github.com/julia-actions/julia-buildpkg
+          julia --color=yes -e 'using Pkg; VERSION >= v"1.5-" && !isdir(joinpath(DEPOT_PATH[1], "registries", "General")) && Pkg.Registry.add("General")'
+          julia --color=yes --project -e 'using Pkg; if VERSION >= v"1.1.0-rc1"; Pkg.build(verbose=true); else Pkg.build(); end'
+          julia --color=yes --project -e 'using Pkg; Pkg.add("Conda"); Pkg.add("PyCall"); using Conda; ENV["PYTHON"] = Conda.PYTHONDIR; Pkg.build("PyCall")'
 
-          julia --project --color=yes --check-bounds=yes -e '\
-            using Pkg; using Conda;\
-            ENV["PYTHON"] = Conda.PYTHONDIR; Pkg.build("PyCall");\
-            Conda.add_channel("conda-forge"); Conda.add("cfgrib");\
-          '
-
-      - name: Install GRIB.jl
+      - name: Run Tests
+        env:
+          JULIA_PKG_SERVER: ""
         run: |
-          julia --project --color=yes --check-bounds=yes -e '\
-            using Pkg;\
-            Pkg.develop(PackageSpec(url="https://github.com/weech/GRIB.jl.git"));\
+          #  https://github.com/julia-actions/julia-runtest
+          julia --color=yes -e 'using Pkg; VERSION >= v"1.5-" && !isdir(joinpath(DEPOT_PATH[1], "registries", "General")) && Pkg.Registry.add("General")'
+          julia --color=yes --check-bounds=yes --inline=yes --depwarn=yes --project -e 'using Pkg; Pkg.test(coverage=true)'
+
+      - name: Process Coverage
+        run: |
+          #  https://github.com/julia-actions/julia-processcoverage
+          julia --color=yes -e '
+            using Pkg; Pkg.activate("coveragetempenv", shared=true)
+            Pkg.add(PackageSpec(name="CoverageTools"))
+            using CoverageTools
+            pf = process_folder()
+            LCOV.writefile("lcov.info", pf)
           '
 
-      - uses: julia-actions/julia-buildpkg@latest
-
-      - uses: julia-actions/julia-runtest@latest
-
-      - uses: julia-actions/julia-processcoverage@latest
       - uses: codecov/codecov-action@v1
         with:
           file: lcov.info
