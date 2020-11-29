@@ -27,10 +27,16 @@ way to implement named arrays, however as Julia is a much younger language no
 stable array interface has been adopted by the community yet, so the approach
 here is more flexible and allows for multiple array backends to be used.
 
+Currently two array backends are supported:
+- [`AxisArrays`](https://github.com/JuliaArrays/AxisArrays.jl)
+- [`DimensionalData`](https://github.com/rafaqz/DimensionalData.jl)
+
+If a backend is found to be installed then its functionality will automatically
+be enabled, otherwise only the built-in bare data types will be returned.
+
 Low level access and decoding is performed by calling
 [GRIB.jl](https://github.com/weech/GRIB.jl) which itself calls the
 [ECMWF ecCodes library](https://software.ecmwf.int/wiki/display/ECC/).
-
 
 ## Installation
 The package is currently under heavy development so it has not been added to the
@@ -49,8 +55,11 @@ the registry), and then finally you can instantiate CfGRIB.jl to get the rest of
 the dependencies:
 
 ```julia
+#  Activate the current directory as a project
 activate .
-add https://github.com/weech/GRIB.jl
+#  To enable backend support
+add AxisArrays
+add DimensionalData
 instantiate
 ```
 
@@ -59,3 +68,25 @@ Finally exit pkg mode by pressing backspace, and use the package as usual:
 ```julia
 using CfGRIB
 ```
+
+## Development and Contribution
+To install the package for development you can run:
+
+```shell
+git clone https://github.com/ecmwf/cfgrib.jl/
+cd CfGRIB.jl
+```
+
+Then in Julia:
+
+```julia
+] activate .
+] develop .
+```
+
+Will install the package as a development package. When you run `] test` the
+tests will run locally. If you want to run the tests within a container similar
+to the ones used when the CI runs via GitHub, then install
+[nektos/act](https://github.com/nektos/act) and run the command
+`act -P ubuntu-latest=nektos/act-environments-ubuntu:18.04 -j tests`, this will
+set up a docker container and run the full test suite within it.
