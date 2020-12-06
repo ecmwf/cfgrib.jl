@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Manual · CfGRIB.jl</title><link rel="canonical" href="https://ecmwf.github.io/cfgrib.jl/stable/man/guide/"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">CfGRIB.jl</span></div><form class="docs-search" action="../../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li class="is-active"><a class="tocitem" href>Manual</a><ul class="internal"><li><a class="tocitem" href="#Internals-1"><span>Internals</span></a></li><li><a class="tocitem" href="#Getting-Data-from-a-DataSet-1"><span>Getting Data from a <code>DataSet</code></span></a></li></ul></li><li><span class="tocitem">Library</span><ul><li><input class="collapse-toggle" id="menuitem-3-1" type="checkbox"/><label class="tocitem" for="menuitem-3-1"><span class="docs-label">Internals</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../lib/internals/backends/">Backends</a></li><li><a class="tocitem" href="../../lib/internals/cfmessage/">CFMessage</a></li><li><a class="tocitem" href="../../lib/internals/constants/">Constants</a></li><li><a class="tocitem" href="../../lib/internals/dataset/">Dataset</a></li><li><a class="tocitem" href="../../lib/internals/indexing/">Indexing</a></li></ul></li></ul></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Manual</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Manual</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/ecmwf/cfgrib.jl/blob/master/docs/src/man/guide.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="In-Depth-Guide-1"><a class="docs-heading-anchor" href="#In-Depth-Guide-1">In Depth Guide</a><a class="docs-heading-anchor-permalink" href="#In-Depth-Guide-1" title="Permalink"></a></h1><p>This is a start guide for how the internals of CfGRIB.jl work, targeted towards advanced users or those who want to work with the internals of the code.</p><p>If you want a quick guide on how to use the package then check the <a href="man/@ref"><code>Quick Start Guide</code></a></p><h2 id="Internals-1"><a class="docs-heading-anchor" href="#Internals-1">Internals</a><a class="docs-heading-anchor-permalink" href="#Internals-1" title="Permalink"></a></h2><p>The package internals are covered in the library section of the documentation in greater detail, however it is useful to have a vague sense of what is happening when you load a dataset.</p><p>First, we load the package, and for convenience create a string pointing to our file path:</p><pre><code class="language-julia-repl">julia&gt; using CfGRIB
+
+julia&gt; sample_data_dir = abspath(joinpath(dirname(pathof(CfGRIB)), &quot;..&quot;, &quot;test&quot;, &quot;sample-data&quot;))
+&quot;/home/runner/.julia/packages/CfGRIB/t9LHA/test/sample-data&quot;
+
+julia&gt; demo_file_path = joinpath(sample_data_dir, &quot;era5-levels-members.grib&quot;)
+&quot;/home/runner/.julia/packages/CfGRIB/t9LHA/test/sample-data/era5-levels-members.grib&quot;</code></pre><h3 id="FileIndex-1"><a class="docs-heading-anchor" href="#FileIndex-1"><code>FileIndex</code></a><a class="docs-heading-anchor-permalink" href="#FileIndex-1" title="Permalink"></a></h3><p>Whenever you load a <code>grib</code> file, the first thing that happens is that the file index is read. The file index contains metadata which describes which messages contain what information inside the file. We can explore the index by manually creating a <a href="#FileIndex-1"><code>FileIndex</code></a> object.</p><p>First, we can look at the docstring for the <code>FileIndex</code> constructor by typing in <code>?</code> at the REPL to enter <code>help</code> mode, then type in <code>CfGRIB.FileIndex</code>, press enter, and we get the docstring:</p><pre><code class="language-julia">help?&gt; CfGRIB.FileIndex
+  Summary
+  ≡≡≡≡≡≡≡≡≡
+
+  mutable struct FileIndex
+
+  A mutable store for indices of a GRIB file
+
+  TODO: Should probably change this to a immutable struct
+
+  Fields
+  ≡≡≡≡≡≡≡≡
+
+    •    allowed_protocol_version::VersionNumber
+
+        Version number used when saving/hashing index files, should change if
+        the indexing structure changes breaking backwards-compatibility
+
+    •    grib_path::String
+
+        Path to the file the index belongs to
+
+    •    index_path::String
+
+        Path to the index cache file
+
+    •    index_keys::Array{String,1}
+
+        Array containing all of the index keys
+
+    •    offsets::Array{Pair{NamedTuple,Int64},1}
+
+        Array containing pairs of offsets[HeaderTuple(header_values)] =&gt; offset_field
+
+    •    message_lengths::Array{Int64,1}
+
+        Array containing the length of each message in the GRIB file
+
+    •    header_values::OrderedCollections.OrderedDict{String,Array}
+
+        Dictionary of all of the loaded header values in the GRIB file
+
+    •    filter_by_keys::Dict
+
+        Filters used when creating the file index
+
+  Constructors
+  ≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+
+  FileIndex()
+
+  defined at dev/CfGRIB/src/indexing.jl:34
+  (https://github.com/ecmwf/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/indexing.jl#L34).
+
+  FileIndex(grib_path, index_keys)
+
+  defined at dev/CfGRIB/src/indexing.jl:38
+  (https://github.com/ecmwf/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/indexing.jl#L38).</code></pre><p>The docstring is quite long, it explains the fields contained in the object, as well as giving a list of the constructors which can be used to create an instance of the object.</p><p>We&#39;ll use the second constructor, which takes in a path to the file and a list of keys. First, we pick which keys we want to use. In this case we&#39;ll just use the <code>ALL_KEYS</code> constant:</p><pre><code class="language-julia-repl">julia&gt; println(CfGRIB.ALL_KEYS)
+[&quot;DxInMetres&quot;, &quot;DyInMetres&quot;, &quot;J&quot;, &quot;K&quot;, &quot;LaDInDegrees&quot;, &quot;Latin1InDegrees&quot;, &quot;Latin2InDegrees&quot;, &quot;LoVInDegrees&quot;, &quot;M&quot;, &quot;N&quot;, &quot;NV&quot;, &quot;Nx&quot;, &quot;Ny&quot;, &quot;angleOfRotationInDegrees&quot;, &quot;centre&quot;, &quot;centreDescription&quot;, &quot;cfName&quot;, &quot;cfVarName&quot;, &quot;dataDate&quot;, &quot;dataTime&quot;, &quot;dataType&quot;, &quot;directionNumber&quot;, &quot;edition&quot;, &quot;endStep&quot;, &quot;forecastMonth&quot;, &quot;frequencyNumber&quot;, &quot;gridDefinitionDescription&quot;, &quot;gridType&quot;, &quot;iDirectionIncrementInDegrees&quot;, &quot;iScansNegatively&quot;, &quot;indexing_time&quot;, &quot;jDirectionIncrementInDegrees&quot;, &quot;jPointsAreConsecutive&quot;, &quot;jScansPositively&quot;, &quot;latitudeOfFirstGridPointInDegrees&quot;, &quot;latitudeOfLastGridPointInDegrees&quot;, &quot;latitudeOfSouthernPoleInDegrees&quot;, &quot;level&quot;, &quot;longitudeOfFirstGridPointInDegrees&quot;, &quot;longitudeOfLastGridPointInDegrees&quot;, &quot;longitudeOfSouthernPoleInDegrees&quot;, &quot;missingValue&quot;, &quot;name&quot;, &quot;number&quot;, &quot;numberOfDirections&quot;, &quot;numberOfFrequencies&quot;, &quot;numberOfPoints&quot;, &quot;paramId&quot;, &quot;pl&quot;, &quot;shortName&quot;, &quot;step&quot;, &quot;stepType&quot;, &quot;stepUnits&quot;, &quot;subCentre&quot;, &quot;time&quot;, &quot;totalNumber&quot;, &quot;typeOfLevel&quot;, &quot;units&quot;, &quot;valid_time&quot;, &quot;verifying_time&quot;]
+
+julia&gt; index = CfGRIB.FileIndex(
+                  demo_file_path,
+                  CfGRIB.ALL_KEYS
+              );</code></pre><p>From here you can explore fields contained in this object. Typically you will never interact with the <code>FileIndex</code> directly, as it&#39;s just used in the background to load the data.</p><h3 id="DataSet-1"><a class="docs-heading-anchor" href="#DataSet-1"><code>DataSet</code></a><a class="docs-heading-anchor-permalink" href="#DataSet-1" title="Permalink"></a></h3><p>Once the <code>FileIndex</code> has been created, the next step is to use it to create a <a href="#DataSet-1"><code>DataSet</code></a> object. The <code>DataSet</code> is what what you use to access the stored data. The docstring says:</p><pre><code class="language-julia">help?&gt; CfGRIB.DataSet
+  Summary
+  ≡≡≡≡≡≡≡≡≡
+
+  struct DataSet
+
+  Map a GRIB file to the NetCDF Common Data Model with CF Conventions.
+
+  Fields
+  ≡≡≡≡≡≡≡≡
+
+    •    dimensions::OrderedCollections.OrderedDict{String,Int64}
+
+        OrderedDict{String,Int} of $DIMENSION_NAME =&gt; $DIMENSION_LENGTH.
+
+    •    variables::OrderedCollections.OrderedDict{String,CfGRIB.Variable}
+
+        OrderedDict{String,CfGRIB.Variable} of $DIMENSION_NAME =&gt; $DIMENSION_VARIABLE, where the the variable is a CfGRIB.jl Variable.
+
+    •    attributes::OrderedCollections.OrderedDict{String,Any}
+
+        OrderedDict{String,Any} containing some metadata extracted from the file.
+
+    •    encoding::Dict{String,Any}
+
+        Dict{String,Any} containing metadata related to CfGRIB.jl, e.g. filter_by_keys
+
+  Constructors
+  ≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+
+  DataSet(dimensions, variables, attributes, encoding)
+
+  defined at dev/CfGRIB/src/dataset.jl:127
+  (https://github.com/ecmwf/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L127).
+
+  DataSet(path; read_keys, kwargs...)
+
+  defined at dev/CfGRIB/src/dataset.jl:140
+  (https://github.com/ecmwf/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L140).</code></pre><p>Here we see references to <a href="#Variable-1"><code>Variable</code></a>, so we&#39;ll briefly explain those.</p><h4 id="Variable-1"><a class="docs-heading-anchor" href="#Variable-1"><code>Variable</code></a><a class="docs-heading-anchor-permalink" href="#Variable-1" title="Permalink"></a></h4><p>A <code>Variable</code> is a basic struct in CfGRIB.jl which contains information for a variable read from a GRIB file:</p><pre><code class="language-julia">help?&gt; CfGRIB.Variable
+  Summary
+  ≡≡≡≡≡≡≡≡≡
+
+  struct Variable
+
+  Struct describing a cfgrib variable
+
+  Fields
+  ≡≡≡≡≡≡≡≡
+
+    •    dimensions::Tuple{Vararg{String,N} where N}
+
+        Name of the dimension(s) contained in this variable
+
+    •    data::Union{CfGRIB.OnDiskArray, Number, Array}
+
+        Data contained in the variable, can point ot in-memory data or to a CfGRIB
+        OnDiskArray
+
+    •    attributes::Dict{String,Any}
+
+        Dictionary containing metadata for the variable, typically the units, the long name,
+        and the standard name
+
+  Constructors
+  ≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+
+  Variable(dimensions, data, attributes)
+
+  defined at dev/CfGRIB/src/dataset.jl:108
+  (https://github.com/ecmwf/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L108).</code></pre><h4 id="OnDiskArray-1"><a class="docs-heading-anchor" href="#OnDiskArray-1"><code>OnDiskArray</code></a><a class="docs-heading-anchor-permalink" href="#OnDiskArray-1" title="Permalink"></a></h4><p>As explained above, <code>Variable</code>s contain a <code>data</code> field, this data can either be in-memory data (<code>Array</code>, <code>Number</code>), or it could be an <code>OnDiskArray</code>. On disk arrays are, as the name hints, a way to represent data stored on the disk before that data is loaded.</p><p>This is done do make it a bit easier to deal with large datasets, as the data is only lazily loaded in when the user attempts to read it. And then, only the requested data is stored in memory.</p><pre><code class="language-julia">help?&gt; CfGRIB.OnDiskArray
+  Summary
+  ≡≡≡≡≡≡≡≡≡
+
+  struct OnDiskArray
+
+  Struct that contains metadata for an array, used to lazy-load the array from disk only when
+  requested
+
+  Fields
+  ≡≡≡≡≡≡≡≡
+
+    •    grib_path::String
+
+    •    size::Tuple
+
+    •    offsets::OrderedCollections.OrderedDict
+
+    •    message_lengths::Array{Int64,1}
+
+    •    missing_value::Any
+
+    •    geo_ndim::Int64
+
+    •    dtype::Type
+
+  Constructors
+  ≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+
+  OnDiskArray(grib_path, size, offsets, message_lengths, missing_value, geo_ndim, dtype)
+
+  defined at dev/CfGRIB/src/dataset.jl:27
+  (https://github.com/ecmwf/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L27).</code></pre><p>The <code>OnDiskArray</code> object contains enough information to fully describe the data stored on disk, and to allow for easy indexing into this data. A custom <code>getindex</code> method dispatches off of this type which opens the grib file at <code>grib_path</code> and reads only the relevant messages.</p><p>For example, if a 3 dimensional array is described by <code>OnDiskArray</code>, and the user requests information with index <code>[1, :, :]</code>, then only messages within that index are loaded from the grib file.</p><h3 id="DataSet-Constructors-1"><a class="docs-heading-anchor" href="#DataSet-Constructors-1"><code>DataSet</code> Constructors</a><a class="docs-heading-anchor-permalink" href="#DataSet-Constructors-1" title="Permalink"></a></h3><p>Now that the groundwork is laid down, lets look into how files are read and used in the end. The most basic option is calling <code>DataSet</code> with a string as a path, this will use the constructor defined at dev/CfGRIB/src/dataset.jl:140 (https://github.com/ecmwf/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L140).</p><p>As you can see this creates a <code>FileIndex</code>, and then returns:</p><pre><code class="language-julia">DataSet(build_dataset_components(
+    index;
+    errors=errors,
+    encode_cf=encode_cf,
+    squeeze=squeeze,
+    read_keys=read_keys,
+    time_dims=time_dims,
+)...)</code></pre><p>The call to <a href="man/@ref"><code>build_dataset_components</code></a> returns the dimensions, variables, attributes, and encoding read from a file. These four variables are then passed to the other relevant constructor defined at dev/CfGRIB/src/dataset.jl:127 (https://github.com/ecmwf/cfgrib.jl/tree/5ced129d540ed9a1ff57da48c9b4f047b17d936d//src/dataset.jl#L127).</p><p>The constructor then returns a <code>DataSet</code> object.</p><h2 id="Getting-Data-from-a-DataSet-1"><a class="docs-heading-anchor" href="#Getting-Data-from-a-DataSet-1">Getting Data from a <code>DataSet</code></a><a class="docs-heading-anchor-permalink" href="#Getting-Data-from-a-DataSet-1" title="Permalink"></a></h2><p>Onc you have a <code>DataSet</code> object, you probably want to access its data.</p><h3 id="Direct-Access-1"><a class="docs-heading-anchor" href="#Direct-Access-1">Direct Access</a><a class="docs-heading-anchor-permalink" href="#Direct-Access-1" title="Permalink"></a></h3><p>The most basic way to do this is to just access the <code>variables</code> directly. For example:</p><pre><code class="language-julia-repl">julia&gt; dataset = CfGRIB.DataSet(demo_file_path);
+┌ Warning: Missing from GRIB Stream directionNumber
+└ @ CfGRIB ~/.julia/packages/CfGRIB/t9LHA/src/dataset.jl:327
+┌ Warning: Missing from GRIB Stream frequencyNumber
+└ @ CfGRIB ~/.julia/packages/CfGRIB/t9LHA/src/dataset.jl:327
+┌ Warning: Missing from GRIB Stream directionNumber
+└ @ CfGRIB ~/.julia/packages/CfGRIB/t9LHA/src/dataset.jl:327
+┌ Warning: Missing from GRIB Stream frequencyNumber
+└ @ CfGRIB ~/.julia/packages/CfGRIB/t9LHA/src/dataset.jl:327
+
+julia&gt; dataset.dimensions
+OrderedCollections.OrderedDict{Any,Any} with 5 entries:
+  &quot;number&quot;        =&gt; 10
+  &quot;time&quot;          =&gt; 4
+  &quot;isobaricInhPa&quot; =&gt; 2
+  &quot;longitude&quot;     =&gt; 120
+  &quot;latitude&quot;      =&gt; 61
+
+julia&gt; dataset.variables
+OrderedCollections.OrderedDict{Any,Any} with 9 entries:
+  &quot;number&quot;        =&gt; Variable((&quot;number&quot;,), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], Dict…
+  &quot;time&quot;          =&gt; Variable((&quot;time&quot;,), [1483228800, 1483272000, 1483315200, 1…
+  &quot;step&quot;          =&gt; Variable((), 0, Dict{String,Any}(&quot;units&quot;=&gt;&quot;hours&quot;,&quot;long_na…
+  &quot;isobaricInhPa&quot; =&gt; Variable((&quot;isobaricInhPa&quot;,), [850, 500], Dict{String,Any}(…
+  &quot;latitude&quot;      =&gt; Variable((&quot;latitude&quot;,), [90.0, 87.0, 84.0, 81.0, 78.0, 75.…
+  &quot;longitude&quot;     =&gt; Variable((&quot;longitude&quot;,), [0.0, 3.0, 6.0, 9.0, 12.0, 15.0, …
+  &quot;valid_time&quot;    =&gt; Variable((&quot;time&quot;,), [1483228800, 1483272000, 1483315200, 1…
+  &quot;z&quot;             =&gt; Variable((&quot;number&quot;, &quot;time&quot;, &quot;isobaricInhPa&quot;, &quot;longitude&quot;, …
+  &quot;t&quot;             =&gt; Variable((&quot;number&quot;, &quot;time&quot;, &quot;isobaricInhPa&quot;, &quot;longitude&quot;, …</code></pre><p>From here you can check the <a href="man/@ref"><code>Variable</code></a> documentation to see what is stored in these. So, if we want to get the data for <code>z</code>:</p><pre><code class="language-julia-repl">julia&gt; dataset.variables[&quot;z&quot;]
+CfGRIB.Variable((&quot;number&quot;, &quot;time&quot;, &quot;isobaricInhPa&quot;, &quot;longitude&quot;, &quot;latitude&quot;), CfGRIB.OnDiskArray(&quot;/home/runner/.julia/packages/CfGRIB/t9LHA/test/sample-data/era5-levels-members.grib&quot;, (10, 4, 2, 120, 61), OrderedCollections.OrderedDict((1, 1, 2) =&gt; 0,(2, 1, 2) =&gt; 14760,(3, 1, 2) =&gt; 29520,(4, 1, 2) =&gt; 44280,(5, 1, 2) =&gt; 59040,(6, 1, 2) =&gt; 73800,(7, 1, 2) =&gt; 88560,(8, 1, 2) =&gt; 103320,(9, 1, 2) =&gt; 118080,(10, 1, 2) =&gt; 132840…), [14752, 14752, 14752, 14752, 14752, 14752, 14752, 14752, 14752, 14752  …  14752, 14752, 14752, 14752, 14752, 14752, 14752, 14752, 14752, 14752], 9999, 2, Float32), Dict{String,Any}(&quot;GRIB_units&quot; =&gt; &quot;m**2 s**-2&quot;,&quot;long_name&quot; =&gt; &quot;Geopotential&quot;,&quot;GRIB_dataType&quot; =&gt; &quot;an&quot;,&quot;GRIB_totalNumber&quot; =&gt; 10,&quot;GRIB_jScansPositively&quot; =&gt; 0,&quot;GRIB_name&quot; =&gt; &quot;Geopotential&quot;,&quot;GRIB_gridType&quot; =&gt; &quot;regular_ll&quot;,&quot;GRIB_Ny&quot; =&gt; 61,&quot;GRIB_longitudeOfLastGridPointInDegrees&quot; =&gt; 357.0,&quot;GRIB_stepUnits&quot; =&gt; 1…))
+
+julia&gt; dataset.variables[&quot;z&quot;].data
+CfGRIB.OnDiskArray(&quot;/home/runner/.julia/packages/CfGRIB/t9LHA/test/sample-data/era5-levels-members.grib&quot;, (10, 4, 2, 120, 61), OrderedCollections.OrderedDict((1, 1, 2) =&gt; 0,(2, 1, 2) =&gt; 14760,(3, 1, 2) =&gt; 29520,(4, 1, 2) =&gt; 44280,(5, 1, 2) =&gt; 59040,(6, 1, 2) =&gt; 73800,(7, 1, 2) =&gt; 88560,(8, 1, 2) =&gt; 103320,(9, 1, 2) =&gt; 118080,(10, 1, 2) =&gt; 132840…), [14752, 14752, 14752, 14752, 14752, 14752, 14752, 14752, 14752, 14752  …  14752, 14752, 14752, 14752, 14752, 14752, 14752, 14752, 14752, 14752], 9999, 2, Float32)
+
+julia&gt; convert(Array, dataset.variables[&quot;z&quot;].data)[:, :, 1, 1, 1]
+10×4 Array{Union{Missing, Float32},2}:
+ 14201.8  14016.0  13708.7  13255.5
+ 14209.2  14010.4  13702.5  13259.5
+ 14212.2  14023.9  13696.9  13254.6
+ 14205.7  14034.3  13710.4  13246.6
+ 14203.8  14023.8  13711.3  13270.9
+ 14205.9  14009.2  13691.9  13261.1
+ 14197.3  14011.9  13711.4  13246.1
+ 14198.7  13994.9  13702.4  13254.3
+ 14215.0  14001.4  13710.5  13245.8
+ 14202.1  14008.7  13709.8  13251.7</code></pre><p>Since it&#39;s an <a href="man/@ref"><code>OnDiskArray</code></a> it has to be <code>converted</code> (which in this case just reads the data from disk) into an Array. Once that&#39;s done, it&#39;s just a standard array type which can be accessed.</p><p>For a normal variable stored in memory this is a bit easier as the reading step does not have to be performed:</p><pre><code class="language-julia-repl">julia&gt; dataset.variables[&quot;number&quot;]
+CfGRIB.Variable((&quot;number&quot;,), [0, 1, 2, 3, 4, 5, 6, 7, 8, 9], Dict{String,Any}(&quot;units&quot; =&gt; &quot;1&quot;,&quot;long_name&quot; =&gt; &quot;ensemble member numerical id&quot;,&quot;standard_name&quot; =&gt; &quot;realization&quot;))
+
+julia&gt; dataset.variables[&quot;number&quot;].data
+10-element Array{Int64,1}:
+ 0
+ 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9</code></pre><p>Accessing all of the data this way would be extremely awkward, so we provide a number of multidimensional named-axis backends which make data access far easier.</p><h3 id="Using-Named-Dimensional-Backends-1"><a class="docs-heading-anchor" href="#Using-Named-Dimensional-Backends-1">Using Named Dimensional Backends</a><a class="docs-heading-anchor-permalink" href="#Using-Named-Dimensional-Backends-1" title="Permalink"></a></h3><p>The recommended way to use CfGRIB.jl is to use an array backend. More information about backends can be found on the <a href="../../lib/internals/backends/#lib_backends-1">Backends</a> documentation page.</p><p>If one of the backend dependencies is available you can convert to that backend data type with the <code>convert</code> function:</p><pre><code class="language-julia-repl">julia&gt; using AxisArrays
+
+julia&gt; dimensional_dataset = convert(AxisArray, dataset)
+AxisArrayWrapper with 2 dataset(s)
+OrderedCollections.OrderedDict{Any,Any} with 7 entries:
+  &quot;GRIB_edition&quot;           =&gt; 1
+  &quot;GRIB_centre&quot;            =&gt; &quot;ecmf&quot;
+  &quot;GRIB_centreDescription&quot; =&gt; &quot;European Centre for Medium-Range Weather Forecas…
+  &quot;GRIB_subCentre&quot;         =&gt; 0
+  &quot;Conventions&quot;            =&gt; &quot;CF-1.7&quot;
+  &quot;institution&quot;            =&gt; &quot;European Centre for Medium-Range Weather Forecas…
+  &quot;history&quot;                =&gt; &quot;2020-12-06T23:05:39.98 GRIB to CDM+CF via cfgrib…</code></pre><p>This conversion to a backend will create an object for that specific backend, preserving all of the data that was present in our <code>DataSet</code> objects (e.g. the metadata will all be propagated through).</p><p>Current backend implementations have two limitations:</p><ol><li>No &#39;dataset&#39; like support</li><li>No metadata support</li></ol><p>These limitations mean that we have to create a wrapper struct which can hold the multidimensional array type from the backend, as well as some additional attributes.</p><p>In the python <code>xarray</code> package, there are two basic types: a <code>DataArray</code> and a <code>DataSet</code>. The <code>DataArray</code> is a multidimensional array of a single variable, which contains information for that variable as well as information about the dimensions which enables useful indexing capabilities.</p><p>The <code>DataSet</code> is a set of <strong>multiple</strong> <code>DataArray</code>s with common dimensions. This lets you have a <code>DataArray</code> containing pressure information with dimensions of, for example, time, latitude, longitude, and height; if you have another set of data with the same dimensions but for temperature then you can store both in a singe <code>DataSet</code>.</p><p>The backends we currently use do not have this functionality, so instead we just wrap the two variables and allow for easy access to both.</p><p>Additionally, our <code>DataSet</code> contains some more metadata (such as the attributes and encoding information), which also cannot be stored in the array backends, so we store that in the wrapper as well.</p><p>To access the data you first access a single specific dataset and then index into it as per the docs for your chosen backend. For example, above we use <code>AxisArrays</code> as the backend, so:</p><pre><code class="language-julia-repl">julia&gt; using AxisArrays
+
+julia&gt; z = dimensional_dataset.z;  # Looking at the `z` variable
+
+julia&gt; z[number=atvalue(0), isobaricInhPa=700..900, longitude=40..44]
+4-dimensional AxisArray{Union{Missing, Float32},4,...} with axes:
+    :time, [1483228800, 1483272000, 1483315200, 1483358400]
+    :isobaricInhPa, [850, 500]
+    :longitude, [42.0]
+    :latitude, [90.0, 87.0, 84.0, 81.0, 78.0, 75.0, 72.0, 69.0, 66.0, 63.0  …  -63.0, -66.0, -69.0, -72.0, -75.0, -78.0, -81.0, -84.0, -87.0, -90.0]
+And data, a 4×2×1×61 Array{Union{Missing, Float32},4}:
+[:, :, 1, 1] =
+ 14201.8  51169.7
+ 14016.0  51021.0
+ 13708.7  50662.6
+ 13255.5  50020.9
+
+[:, :, 1, 2] =
+ 14461.5  51376.7
+ 14347.1  51350.8
+ 14031.6  51023.8
+ 13555.4  50434.4
+
+[:, :, 1, 3] =
+ 14355.8  51298.5
+ 14449.1  51440.5
+ 14255.8  51261.3
+ 13881.7  50837.9
+
+...
+
+[:, :, 1, 59] =
+ 12971.8  51226.2
+ 12980.1  51227.8
+ 13027.4  51272.8
+ 13053.1  51351.6
+
+[:, :, 1, 60] =
+ 12869.4  51110.7
+ 12939.5  51117.5
+ 13028.1  51166.1
+ 13029.5  51173.4
+
+[:, :, 1, 61] =
+ 12660.4  50866.5
+ 12797.1  50978.3
+ 12963.9  51146.1
+ 12987.2  51174.9</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../../">« Home</a><a class="docs-footer-nextpage" href="../../lib/internals/backends/">Backends »</a></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Sunday 6 December 2020 23:06">Sunday 6 December 2020</span>. Using Julia version 1.4.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
