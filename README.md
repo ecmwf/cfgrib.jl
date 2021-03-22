@@ -50,9 +50,8 @@ cd CfGRIB.jl
 Then start Julia, enter the
 [pkg mode](https://docs.julialang.org/en/v1/stdlib/Pkg/), activate the
 [project](https://julialang.github.io/Pkg.jl/stable/environments/) (projects are
-similar to python `venv`'s), install the GRIB.jl package (as it is also not on
-the registry), and then finally you can instantiate CfGRIB.jl to get the rest of
-the dependencies:
+similar to python `venv`'s), and then you can instantiate CfGRIB.jl to download and build
+dependencies:
 
 ```julia
 #  Activate the current directory as a project
