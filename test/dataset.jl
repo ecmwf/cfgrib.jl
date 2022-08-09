@@ -26,7 +26,6 @@ end
         [1,2,3],
         missing,
         10,
-        Float32
     )
 
     @test size(oda) == oda.size
