@@ -31,9 +31,9 @@ struct AxisArrayWrapper <: ArrayWrapper
     AxisArrayWrapper(dimensions, datasets, attributes, encoding) = new(dimensions, datasets, attributes, encoding)
 end
 
-getindex(obj::AxisArrayWrapper, key) = getfield(obj, :datasets)[key]
-keys(obj::AxisArrayWrapper) = keys(getfield(obj, :datasets))
-haskey(obj::AxisArrayWrapper, key) = key in keys(obj)
+Base.getindex(obj::AxisArrayWrapper, key) = getfield(obj, :datasets)[key]
+Base.keys(obj::AxisArrayWrapper) = keys(getfield(obj, :datasets))
+Base.haskey(obj::AxisArrayWrapper, key) = key in keys(obj)
 
 function Base.getproperty(obj::AxisArrayWrapper, key::Symbol)
     if key in keys(obj)

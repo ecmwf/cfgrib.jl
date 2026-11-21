@@ -31,9 +31,9 @@ struct DimensionalArrayWrapper <: ArrayWrapper
     DimensionalArrayWrapper(dimensions, datasets, attributes, encoding) = new(dimensions, datasets, attributes, encoding)
 end
 
-getindex(obj::DimensionalArrayWrapper, key) = getfield(obj, :datasets)[key]
-keys(obj::DimensionalArrayWrapper) = keys(getfield(obj, :datasets))
-haskey(obj::DimensionalArrayWrapper, key) = key in keys(obj)
+Base.getindex(obj::DimensionalArrayWrapper, key) = getfield(obj, :datasets)[key]
+Base.keys(obj::DimensionalArrayWrapper) = keys(getfield(obj, :datasets))
+Base.haskey(obj::DimensionalArrayWrapper, key) = key in keys(obj)
 
 function Base.getproperty(obj::DimensionalArrayWrapper, key::Symbol)
     if key in keys(obj)
