@@ -13,20 +13,21 @@ end
 
 
 "Struct that contains metadata for an array, used to lazy-load the array from disk only when requested"
-struct OnDiskArray
+struct OnDiskArray{T, N} <: DiskArrays.AbstractDiskArray{T, N}
     grib_path::String
-    size::Tuple
+    size::NTuple{N, Int}
     offsets::OrderedDict
     message_lengths::Array{Int,1}
     missing_value::Any
     geo_ndim::Int
-    dtype::Type
 
     #  Manually define inner constructor here so that it does not appear twice
     #  in the docs
-    OnDiskArray(grib_path, size, offsets, message_lengths, missing_value, geo_ndim, dtype) =
-        new(grib_path, size, offsets, message_lengths, missing_value, geo_ndim, dtype)
+    # OnDiskArray(grib_path, size, offsets, message_lengths, missing_value, geo_ndim, dtype) =
+        # new(grib_path, size, offsets, message_lengths, missing_value, geo_ndim, dtype)
 end
+OnDiskArray(grib_path, size::NTuple{N, Int}, offsets, message_lengths, missing_value, geo_ndim) where N = 
+    OnDiskArray{Union{Missing, Float32}, N}(grib_path, size, offsets, message_lengths, missing_value, geo_ndim) 
 
 expand_key(key, shape) = Tuple((1:l)[k] for (k, l) in zip(key, shape))
 
@@ -35,27 +36,33 @@ Base.size(A::OnDiskArray) = A.size
 Base.axes(A::OnDiskArray) = Tuple(Base.OneTo(i) for i in size(A))
 Base.axes(A::OnDiskArray, d::Int) = axes(A)[d]
 
+DA.eachchunk(A::OnDiskArray) = DA.GridChunks(A, size(A))
+DA.haschunks(A::OnDiskArray) = DA.Unchunked()
+
 function Base.convert(::Type{T}, A::OnDiskArray)::T where {T <: Array}
     res = A[repeat([Colon()], length(size(A)))...]
     return T(res)
 end
 
-#  TODO: Use proper `to_indices`, add boundscheck
-function Base.getindex(obj::OnDiskArray, key...)
-    expanded_keys = expand_key(key, size(obj))
+function DA.readblock!(A::OnDiskArray, aout, i::AbstractUnitRange...) where {T,N}
+    ndims(A) == length(i) || error("Number of indices is not correct")
+    all(r->isa(r,AbstractUnitRange),i) || error("Not all indices are unit ranges")
+    # expanded_keys = expand_key(i, size(A))
     #  Geography dims (e.g. lat, lon) are on the end and need to be loaded fully
     #  so only look at the other dimensions
-    header_items = expanded_keys[1:end-obj.geo_ndim]
-    array_field_shape = (
-        (length(l) for l in header_items)..., size(obj)[end-obj.geo_ndim+1:end]...
-    )
-    array_field = Array{Union{Missing,obj.dtype}}(undef, array_field_shape...)
+    ngeo = A.geo_ndim
+    header_items = i[1:end-ngeo]
+    # array_field_shape = (
+    #     (length(l) for l in header_items)..., size(A)[end-A.geo_ndim+1:end]...
+    # )
+    geo_items = i[end-ngeo+1:end]
+    # array_field = Array{Union{Missing,T}}(undef, i...)
 
-    geo_ndim_idx = repeat([Colon()], obj.geo_ndim)
+    geo_ndim_idx = repeat([Colon()], A.geo_ndim)
 
-    GribFile(obj.grib_path) do file
-        message_length_cumsum = cumsum(obj.message_lengths)
-        for (header_indexes, offset) in pairs(obj.offsets)
+    GribFile(A.grib_path) do file
+        message_length_cumsum = cumsum(A.message_lengths)
+        for (header_indexes, offset) in pairs(A.offsets)
             if length(header_indexes) == 0
                 array_field_indexes = ()
             else
@@ -77,20 +84,10 @@ function Base.getindex(obj::OnDiskArray, key...)
             seek(file, offset_message_index)
             message = Message(file)
             values = message["values"]
-            array_field[array_field_indexes..., geo_ndim_idx...] = values
+            aout[array_field_indexes..., geo_ndim_idx...] = replace(values[geo_items...], A.missing_value => missing)
         end
     end
-
-    #  Weird 'correction, not sure if this the right approach. In the case
-    #  where the key is like [:, :, *2*, 120, 61] you might have an array field of
-    #  shape (10, 4, 1, 120, 61), which correctly means that only the 2nd layer
-    #  was loaded. However this means that the index *2* should now be 1
-    corrected_key = collect(Any, deepcopy(key))
-    corrected_key[collect(array_field_shape) .== 1] .= 1
-    replace!(array_field, obj.missing_value => missing)
-    return getindex(array_field, corrected_key...)
 end
-
 
 "Struct describing a cfgrib variable"
 Base.@kwdef struct Variable
@@ -435,14 +432,13 @@ function build_variable_components(
     end
 
     missing_value = get(data_var_attrs, "missingValue", 9999)
-    data = OnDiskArray(
+    data = OnDiskArray{Union{Missing, Float32}, length(shape)}(
         index.grib_path,
         shape,
         offsets,
         index.message_lengths,
         missing_value,
         length(geo_dims),
-        Float32, #  TODO: Should be the actual type of the data...
     )
 
     if haskey(coord_vars, "time") && haskey(coord_vars, "step")

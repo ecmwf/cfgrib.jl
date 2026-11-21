@@ -106,7 +106,7 @@ using PyCall
         @test res.variables["z"].dimensions == (
             "number", "time", "isobaricInhPa", "longitude", "latitude"
         )
-        @test typeof(res.variables["z"].data) == CfGRIB.OnDiskArray
+        @test typeof(res.variables["z"].data) <: CfGRIB.OnDiskArray
         @test size(res.variables["z"].data) == (10, 4, 2, 120, 61)
         @test_broken res.variables["z"].missing_value == 9999
         #  Currently these are not `OrderedDict`, and in the wrong order
@@ -181,7 +181,7 @@ using PyCall
         @test res.variables["t"].dimensions == (
             "number", "time", "isobaricInhPa", "longitude", "latitude"
         )
-        @test typeof(res.variables["t"].data) == CfGRIB.OnDiskArray
+        @test typeof(res.variables["t"].data) <: CfGRIB.OnDiskArray
         @test size(res.variables["t"].data) == (10, 4, 2, 120, 61)
         @test_broken res.variables["t"].missing_value == 9999
         #  TODO: Make these into 'OrderedDict', and order correctly
